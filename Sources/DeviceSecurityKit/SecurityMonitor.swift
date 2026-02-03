@@ -1,10 +1,3 @@
-//
-//  SecurityMonitor.swift
-//  DeviceSecurityKit
-//
-//  Created by tBug on 3. 2. 2026..
-//
-
 import Foundation
 
 public final class SecurityMonitor: SecurityMonitorType {
