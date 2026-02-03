@@ -1,0 +1,3 @@
+*.xcuserstate
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/xcuserdata/tbug.xcuserdatad/xcschemes/xcschememanagement.plist
