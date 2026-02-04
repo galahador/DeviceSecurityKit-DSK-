@@ -5,6 +5,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case debugger
     case emulator
     case reverseEngineering
+    case noThreat
     
     public var description: String {
         switch self {
@@ -16,6 +17,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Running in emulator"
         case .reverseEngineering:
             return "App tampering detected"
+        case .noThreat:
+            return "App is Secure"
         }
     }
     
@@ -29,11 +32,14 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return .critical
         case .emulator:
             return .medium
+        case .noThreat:
+            return .normal
         }
     }
 }
 
 public enum ThreatSeverity: Int, Comparable {
+    case normal = 0
     case low = 1
     case medium = 2
     case high = 3
