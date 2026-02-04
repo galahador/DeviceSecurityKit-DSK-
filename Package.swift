@@ -16,7 +16,7 @@ let package = Package(
         .target(
             name: "DeviceSecurityKit",
             dependencies: [],
-            path: "Sources/DeviceSecurityKit"
+            path: "Sources"
         )
     ]
 )
