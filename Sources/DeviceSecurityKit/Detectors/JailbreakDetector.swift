@@ -47,11 +47,12 @@ public final class JailbreakDetector {
     
     private static func checkSuspiciousURLSchemes() -> Bool {
         for scheme in jailbreakListOptions.urlSchemes {
-            if let url = URL(string: scheme) {
+            // TODO: - Check This in future 
+//            if let url = URL(string: scheme) {
 //                if UIApplication.shared.canOpenURL(url) {
 //                    return true
 //                }
-            }
+//            }
         }
         
         return false
