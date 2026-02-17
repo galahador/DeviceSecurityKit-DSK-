@@ -9,13 +9,16 @@ import Foundation
 
 struct DebuggerDetectorList {
     let suspiciousNames = [
-        "lldb", "gdb", "debugserver", "xpcproxy",
-        "instruments", "dtrace", "dtruss", "fs_usage",
-        "sample", "spindump", "crashreporterd"
+        "lldb",
+        "gdb",
+        "debugserver",
+        "xpcproxy",
+        "frida",
+        "objection",
+        "instruments"
     ]
     
     let suspiciousEnvVars = [
-        "DYLD_INSERT_LIBRARIES",
         "DYLD_INTERPOSE",
         "DYLD_PRINT_LIBRARIES",
         "DYLD_PRINT_APIS",

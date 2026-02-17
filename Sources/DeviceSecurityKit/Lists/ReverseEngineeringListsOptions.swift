@@ -10,7 +10,9 @@ struct ReverseEngineeringListsOptions {
         "libhooker",
         "Shadow",
         "ABypass",
-        "Liberty"
+        "Liberty",
+        "Choicy",
+        "vnodebypass"
     ]
 
     let suspiciousVars = [

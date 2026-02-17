@@ -2,20 +2,16 @@ import Foundation
 
 struct EmulatorDetectorListOptions {
     let simulatorPaths = [
-        // Original paths
         "/System/Library/CoreServices/CoreSimulatorBridge.app",
-        "/AppleInternal",
-        
-        // Additional comprehensive paths
-        "/Applications/Xcode.app",
-        "/usr/bin/xcrun",
         "/System/Library/Frameworks/CoreSimulator.framework",
-        "/Library/Developer/CoreSimulator",
-        "/private/var/containers/Bundle/Application",
-        "/var/folders",
         "/System/Library/PrivateFrameworks/CoreSimulator.framework",
+        "/Library/Developer/CoreSimulator",
         "/Library/Developer/Xcode",
-        "/usr/bin/simctl"
+        "/Applications/Xcode.app",
+        "/usr/bin/simctl",
+        "/usr/bin/xcrun",
+        "/AppleInternal",
+        "/var/folders"
     ]
     
     let suspiciousEnvVars = [
