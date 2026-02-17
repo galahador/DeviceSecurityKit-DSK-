@@ -35,50 +35,56 @@ public final class EmulatorDetector {
     }
     
     public static func detectEmulator() -> DetectionResult {
-        logger.info("Starting comprehensive emulator detection")
         
         var detectionMethods: [String] = []
         var confidenceScore: Float = 0.0
-        let totalChecks: Float = 6.0
+        let totalChecks: Float = 9.0
         
         if checkSimulatorEnvironment() {
             detectionMethods.append("targetEnvironment(simulator)")
             confidenceScore += 2.0
-            logger.warning("Emulator detected via compilation target")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via compilation target", logger: logger)
         }
         
         if checkSimulatorPaths() {
             detectionMethods.append("simulatorPaths")
             confidenceScore += 1.5
-            logger.warning("Emulator detected via filesystem paths")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via filesystem paths", logger: logger)
         }
         
         if checkDeviceModel() {
             detectionMethods.append("deviceModel")
             confidenceScore += 1.5
-            logger.warning("Emulator detected via device model")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via device model", logger: logger)
         }
         
         if checkSystemProperties() {
             detectionMethods.append("systemProperties")
             confidenceScore += 2.0
-            logger.warning("Emulator detected via system properties")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via system properties", logger: logger)
+            
         }
         
         if checkRuntimeEnvironment() {
             detectionMethods.append("runtimeEnvironment")
             confidenceScore += 0.8
-            logger.warning("Emulator detected via runtime environment")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via runtime environment", logger: logger)
         }
         
         if checkProcessEnvironment() {
             detectionMethods.append("processEnvironment")
             confidenceScore += 1.2
-            logger.warning("Emulator detected via process environment")
+            secureLog(publicMessage: "Emulator detected",
+                      debugMessage: "Emulator detected via process environment", logger: logger)
         }
         
         let confidence = min(confidenceScore / totalChecks, 1.0)
-        let isEmulator = confidence > 0.25
+        let isEmulator = detectionMethods.count >= 2
         
         let result = DetectionResult(
             isEmulator: isEmulator,
@@ -87,12 +93,22 @@ public final class EmulatorDetector {
         )
         
         if isEmulator {
-            logger.error("Emulator detected with confidence: \(String(format: "%.2f", confidence * 100))%. Methods: \(detectionMethods.joined(separator: ", "))")
+            secureLog(publicMessage: "Emulator detected with confidence: \(String(format: "%.2f", confidence * 100))%. Methods: \(detectionMethods.joined(separator: ", "))",
+                      debugMessage: "Emulator detected", logger: logger)
         } else {
-            logger.info("No emulator detected. Running on physical iOS device.")
+            secureLog(publicMessage: "No emulator detected. Running on physical iOS device.",
+                      debugMessage: "/", logger: logger)
         }
         
         return result
+    }
+    
+    private static func secureLog( publicMessage: String, debugMessage: String, logger: SecurityLogger) {
+#if DEBUG
+        logger.error(debugMessage)
+#else
+        logger.info(publicMessage)
+#endif
     }
     
     // MARK: - Private Detection Methods
@@ -114,7 +130,9 @@ public final class EmulatorDetector {
         
         let additionalPaths = emulatorDetectorListOptions.simulatorPaths + [
             "/usr/bin/simctl",
-            "/private/var/containers/Bundle/Application"
+            "/System/Library/CoreServices/CoreSimulatorBridge.app",
+            "/System/Library/PrivateFrameworks/CoreSimulator.framework",
+            "/Library/Developer/CoreSimulator"
         ]
         
         for path in criticalPaths {
@@ -155,7 +173,7 @@ public final class EmulatorDetector {
             return true
         }
         
-        if modelIdentifier == "arm64" {
+        if modelIdentifier.lowercased().contains("arm64") {
             return checkIfSimulatorOnAppleSilicon()
         }
         
