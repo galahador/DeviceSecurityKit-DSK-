@@ -4,41 +4,41 @@ import Foundation
 import os.log
 #endif
 
-/// A custom logger designed for security-related operations with cross-platform compatibility
+// MARK: - SecurityLogger Manager
 public final class SecurityLogger {
     
     // MARK: - Public Types
     
-    public enum LogLevel: String, CaseIterable {
-        case debug = "🔍 DEBUG"
-        case info = "ℹ️ INFO"
-        case warning = "⚠️ WARNING"
-        case error = "❌ ERROR"
+    public enum LogLevel: Int, CaseIterable, Comparable {
+        case debug = 0
+        case info = 1
+        case warning = 2
+        case error = 3
         
-        internal var shouldLog: Bool {
-            #if DEBUG
-            return true
-            #else
-            // In release builds, only log warnings and errors for security
-            return self == .warning || self == .error
-            #endif
+        public var displayName: String {
+            switch self {
+            case .debug: return "🔍 DEBUG"
+            case .info: return "ℹ️ INFO"
+            case .warning: return "⚠️ WARNING"
+            case .error: return "❌ ERROR"
+            }
         }
         
         internal var osLogType: OSLogType {
             #if canImport(os.log)
             switch self {
-            case .debug:
-                return .debug
-            case .info:
-                return .info
-            case .warning:
-                return .default
-            case .error:
-                return .error
+            case .debug: return .debug
+            case .info: return .info
+            case .warning: return .default
+            case .error: return .error
             }
             #else
             return .default
             #endif
+        }
+        
+        public static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
+            return lhs.rawValue < rhs.rawValue
         }
     }
     
@@ -47,6 +47,7 @@ public final class SecurityLogger {
     private let subsystem: String
     private let category: String
     private let dateFormatter: DateFormatter
+    private let loggingQueue = DispatchQueue(label: "SecurityLogger.output", qos: .utility)
     
     #if canImport(os.log)
     @available(iOS 10.0, *)
@@ -60,7 +61,7 @@ public final class SecurityLogger {
     public init(subsystem: String, category: String) {
         self.subsystem = subsystem
         self.category = category
-        self.dateFormatter = SecurityLogger.createDateFormatter()
+        self.dateFormatter = Self.createDateFormatter()
     }
     
     // MARK: - Public Methods
@@ -73,20 +74,24 @@ public final class SecurityLogger {
         function: String = #function,
         line: Int = #line
     ) {
-        guard level.shouldLog else { return }
+        let config = SecurityLoggerManager.shared.currentConfiguration()
         
-        let logMessage = formatLogMessage(
-            message: message,
-            level: level,
-            file: file,
-            function: function,
-            line: line
-        )
+        // Check if logging is enabled and level is appropriate
+        guard config.enableLogging && level >= config.logLevel else { return }
         
-        outputLog(logMessage, level: level)
+        loggingQueue.async { [weak self] in
+            self?.performLogging(
+                message: message,
+                level: level,
+                file: file,
+                function: function,
+                line: line,
+                config: config
+            )
+        }
     }
     
-    /// Log a debug message (only in DEBUG builds)
+    /// Log a debug message
     public func debug(
         _ message: String,
         file: String = #file,
@@ -132,7 +137,41 @@ public final class SecurityLogger {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
         return formatter
+    }
+    
+    private func performLogging(
+        message: String,
+        level: LogLevel,
+        file: String,
+        function: String,
+        line: Int,
+        config: SecurityLoggerConfiguration
+    ) {
+        let formattedMessage = formatLogMessage(
+            message: message,
+            level: level,
+            file: file,
+            function: function,
+            line: line
+        )
+        
+        // Custom output handler has highest priority
+        if let customHandler = config.customOutputHandler {
+            customHandler(formattedMessage, level)
+            return
+        }
+        
+        // Console output
+        if config.enableConsoleOutput {
+            print(formattedMessage)
+        }
+        
+        // System logging
+        if config.enableSystemLogging {
+            outputToSystem(formattedMessage, level: level)
+        }
     }
     
     private func formatLogMessage(
@@ -145,24 +184,18 @@ public final class SecurityLogger {
         let fileName = URL(fileURLWithPath: file).lastPathComponent
         let timestamp = dateFormatter.string(from: Date())
         
-        return "[\(timestamp)] \(level.rawValue) [\(subsystem):\(category)] \(fileName):\(line) \(function) - \(message)"
+        return "[\(timestamp)] \(level.displayName) [\(subsystem):\(category)] \(fileName):\(line) \(function) - \(message)"
     }
     
-    private func outputLog(_ message: String, level: LogLevel) {
-        #if DEBUG
-        // In debug builds, always print to console for immediate visibility
-        print(message)
-        #else
-        // In release builds, use system logging when available
+    private func outputToSystem(_ message: String, level: LogLevel) {
+        #if canImport(os.log)
         if #available(iOS 10.0, *) {
-            #if canImport(os.log)
             os_log("%{public}@", log: osLog, type: level.osLogType, message)
-            #else
-            NSLog("%@", message)
-            #endif
         } else {
             NSLog("%@", message)
         }
+        #else
+        NSLog("%@", message)
         #endif
     }
 }
@@ -183,5 +216,24 @@ public extension SecurityLogger {
     /// Create a logger for monitoring operations
     static func monitor(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Monitor")
+    }
+    
+    /// Create a logger for detection operations
+    static func detection(subsystem: String) -> SecurityLogger {
+        return SecurityLogger(subsystem: subsystem, category: "Detection")
+    }
+    
+    /// Create a logger for analysis operations
+    static func analysis(subsystem: String) -> SecurityLogger {
+        return SecurityLogger(subsystem: subsystem, category: "Analysis")
+    }
+}
+
+// MARK: - Library Internal Helper
+
+internal extension SecurityLogger {
+    /// Internal helper for library components to create consistent loggers
+    static func libraryLogger(for component: String) -> SecurityLogger {
+        return SecurityLogger(subsystem: "DeviceSecurityKit", category: component)
     }
 }
