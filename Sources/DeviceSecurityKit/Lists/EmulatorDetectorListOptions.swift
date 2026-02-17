@@ -17,4 +17,11 @@ struct EmulatorDetectorListOptions {
         "/Library/Developer/Xcode",
         "/usr/bin/simctl"
     ]
+    
+    let suspiciousEnvVars = [
+        "SIMULATOR_DEVICE_NAME",
+        "SIMULATOR_VERSION_INFO",
+        "IPHONE_SIMULATOR_ROOT",
+        "SIMULATOR_ROOT"
+    ]
 }
