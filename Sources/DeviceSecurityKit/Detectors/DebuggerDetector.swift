@@ -108,7 +108,9 @@ public final class DebuggerDetector {
         let ptraceErrno = errno
         errno = originalErrno
         
-        let detected = result == -1 && (ptraceErrno == EPERM || ptraceErrno == EBUSY)
+        // EPERM means sandbox restriction — not a debugger indicator, ignore it.
+        // EBUSY means the process is already being traced by a debugger.
+        let detected = result == -1 && ptraceErrno == EBUSY
         if detected {
             logger.info("ptrace detection triggered with errno: \(ptraceErrno)")
         }
@@ -188,7 +190,7 @@ public final class DebuggerDetector {
         var timebaseInfo = mach_timebase_info()
         mach_timebase_info(&timebaseInfo)
         
-        let avgTime = measurements.reduce(0, +) / UInt64(measurements.count)
+        let avgTime = measurements.reduce(0 as UInt64) { $0 &+ $1 } / UInt64(measurements.count)
         let elapsed = avgTime * UInt64(timebaseInfo.numer) / UInt64(timebaseInfo.denom)
         
         let detected = elapsed > 50_000_000

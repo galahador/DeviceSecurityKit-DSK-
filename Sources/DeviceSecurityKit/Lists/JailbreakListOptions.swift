@@ -61,7 +61,6 @@ struct JailbreakListOptions {
 
         // Preboot (dopamine / palera1n rootless)
         "/private/preboot",
-        "/private/preboot/*/jb",
 
         // Daemons / prefs
         "/Library/PreferenceBundles",

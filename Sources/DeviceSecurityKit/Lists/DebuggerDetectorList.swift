@@ -12,7 +12,6 @@ struct DebuggerDetectorList {
         "lldb",
         "gdb",
         "debugserver",
-        "xpcproxy",
         "frida",
         "objection",
         "instruments"
