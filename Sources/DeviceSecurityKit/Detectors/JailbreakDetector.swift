@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 public final class JailbreakDetector {
     
@@ -7,12 +8,16 @@ public final class JailbreakDetector {
     
     // MARK: - Public
     
+    public static var urlSchemeChecker: ((URL) -> Bool)?
     /// Main jailbreak detection method
     public static func isJailbroken() -> Bool {
         return checkJailbreakFiles()
-            || checkSandboxIntegrity()
-            || checkSuspiciousURLSchemes()
-            || checkSymbolicLinks()
+        || checkSandboxIntegrity()
+        || checkForkCapability()
+        || checkSuspiciousURLSchemes()
+        || checkSymbolicLinks()
+        || checkSuspiciousEnvironmentVars()
+        || checkPrebootJailbreakPaths()
     }
     
     // MARK: - Private Detection Methods
@@ -46,11 +51,11 @@ public final class JailbreakDetector {
     }
     
     private static func checkSuspiciousURLSchemes() -> Bool {
+        guard let checker = urlSchemeChecker else { return false }
+        
         for scheme in jailbreakListOptions.urlSchemes {
-            if let url = URL(string: scheme) {
-//                if UIApplication.shared.canOpenURL(url) {
-//                    return true
-//                }
+            if let url = URL(string: scheme), checker(url) {
+                return true
             }
         }
         
@@ -70,6 +75,47 @@ public final class JailbreakDetector {
             }
         }
         
+        return false
+    }
+    
+    /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
+    private static func checkSuspiciousEnvironmentVars() -> Bool {
+        for envVar in jailbreakListOptions.suspiciousVars {
+            if getenv(envVar) != nil {
+                return true
+            }
+        }
+        return false
+    }
+    
+    private static func checkForkCapability() -> Bool {
+        typealias ForkType = @convention(c) () -> pid_t
+        
+        guard let handle = dlopen(nil, RTLD_NOW),
+              let sym = dlsym(handle, "fork") else { return false }
+        dlclose(handle)
+        
+        let forkFn = unsafeBitCast(sym, to: ForkType.self)
+        let pid = forkFn()
+        if pid == 0 {
+            // Child process — fork succeeded, which must not happen in a sandbox
+            exit(0)
+        }
+        return pid > 0
+    }
+    
+    private static func checkPrebootJailbreakPaths() -> Bool {
+        let prebootPath = "/private/preboot"
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: prebootPath) else {
+            return false
+        }
+        for entry in entries {
+            let jbPath = "\(prebootPath)/\(entry)/jb"
+            if FileManager.default.fileExists(atPath: jbPath)
+                || FileManager.default.isReadableFile(atPath: jbPath) {
+                return true
+            }
+        }
         return false
     }
 }
