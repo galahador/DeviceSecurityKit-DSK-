@@ -1,39 +1,41 @@
 import Foundation
-import UIKit
+import Darwin
 
 public final class JailbreakDetector {
-
+    
     // MARK: - Private Properties
     private static let jailbreakListOptions = JailbreakListOptions()
-
+    
     // MARK: - Public
-
+    
+    public static var urlSchemeChecker: ((URL) -> Bool)?
     /// Main jailbreak detection method
     public static func isJailbroken() -> Bool {
         return checkJailbreakFiles()
-            || checkSandboxIntegrity()
-            || checkSuspiciousURLSchemes()
-            || checkSymbolicLinks()
-            || checkSuspiciousEnvironmentVars()
-            || checkPrebootJailbreakPaths()
+        || checkSandboxIntegrity()
+        || checkForkCapability()
+        || checkSuspiciousURLSchemes()
+        || checkSymbolicLinks()
+        || checkSuspiciousEnvironmentVars()
+        || checkPrebootJailbreakPaths()
     }
-
+    
     // MARK: - Private Detection Methods
-
+    
     private static func checkJailbreakFiles() -> Bool {
         for path in jailbreakListOptions.jailbreakPaths {
             if FileManager.default.fileExists(atPath: path) {
                 return true
             }
-
+            
             if FileManager.default.isReadableFile(atPath: path) {
                 return true
             }
         }
-
+        
         return false
     }
-
+    
     private static func checkSandboxIntegrity() -> Bool {
         for testPath in jailbreakListOptions.testPaths {
             do {
@@ -44,32 +46,22 @@ public final class JailbreakDetector {
                 continue
             }
         }
-
+        
         return false
     }
-
-    /// Checks for jailbreak-related URL schemes.
-    /// NOTE: The host app must declare the schemes in LSApplicationQueriesSchemes
-    /// in its Info.plist for canOpenURL to return true on iOS 9+.
+    
     private static func checkSuspiciousURLSchemes() -> Bool {
-        var detected = false
-        let check = {
-            for scheme in jailbreakListOptions.urlSchemes {
-                if let url = URL(string: scheme),
-                   UIApplication.shared.canOpenURL(url) {
-                    detected = true
-                    break
-                }
+        guard let checker = urlSchemeChecker else { return false }
+        
+        for scheme in jailbreakListOptions.urlSchemes {
+            if let url = URL(string: scheme), checker(url) {
+                return true
             }
         }
-        if Thread.isMainThread {
-            check()
-        } else {
-            DispatchQueue.main.sync { check() }
-        }
-        return detected
+        
+        return false
     }
-
+    
     private static func checkSymbolicLinks() -> Bool {
         for path in jailbreakListOptions.suspiciousPaths {
             do {
@@ -82,10 +74,10 @@ public final class JailbreakDetector {
                 continue
             }
         }
-
+        
         return false
     }
-
+    
     /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
     private static func checkSuspiciousEnvironmentVars() -> Bool {
         for envVar in jailbreakListOptions.suspiciousVars {
@@ -95,9 +87,23 @@ public final class JailbreakDetector {
         }
         return false
     }
-
-    /// Scans /private/preboot/<uuid>/jb paths used by rootless jailbreaks (dopamine, palera1n).
-    /// FileManager does not expand glob patterns, so each UUID directory is enumerated manually.
+    
+    private static func checkForkCapability() -> Bool {
+        typealias ForkType = @convention(c) () -> pid_t
+        
+        guard let handle = dlopen(nil, RTLD_NOW),
+              let sym = dlsym(handle, "fork") else { return false }
+        dlclose(handle)
+        
+        let forkFn = unsafeBitCast(sym, to: ForkType.self)
+        let pid = forkFn()
+        if pid == 0 {
+            // Child process — fork succeeded, which must not happen in a sandbox
+            exit(0)
+        }
+        return pid > 0
+    }
+    
     private static func checkPrebootJailbreakPaths() -> Bool {
         let prebootPath = "/private/preboot"
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: prebootPath) else {
