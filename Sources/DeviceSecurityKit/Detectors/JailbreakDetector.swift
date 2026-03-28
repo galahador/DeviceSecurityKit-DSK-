@@ -85,7 +85,7 @@ public final class JailbreakDetector {
     // MARK: - Private Detection Methods
 
     private static func checkJailbreakFiles() -> Bool {
-        for path in jailbreakListOptions.jailbreakPaths {
+        for path in jailbreakListOptions.suspiciousPaths {
             if FileManager.default.fileExists(atPath: path) {
                 return true
             }

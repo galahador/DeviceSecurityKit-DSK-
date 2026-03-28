@@ -17,6 +17,11 @@ let package = Package(
             name: "DeviceSecurityKit",
             dependencies: [],
             path: "Sources"
+        ),
+        .testTarget(
+            name: "DeviceSecurityKitTests",
+            dependencies: ["DeviceSecurityKit"],
+            path: "Tests/DeviceSecurityKitTests"
         )
     ]
 )
