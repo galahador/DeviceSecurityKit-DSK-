@@ -24,6 +24,8 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     public var monitoringInterval: TimeInterval = 60.0
 
+    public var screenRecordingProvider: ScreenRecordingProvider?
+
     // MARK: - Initialization
 
     public init(configuration: DeviceSecurityConfiguration = .default) {
@@ -83,6 +85,12 @@ public final class SecurityMonitor: SecurityMonitorType {
 
         if configuration.reverseEngineeringCheckEnabled && ReverseEngineeringDetector.isReverseEngineered() {
             threats.append(.reverseEngineering)
+        }
+
+        if configuration.screenRecordingCheckEnabled,
+           let provider = screenRecordingProvider,
+           provider.isScreenBeingRecorded() {
+            threats.append(.screenRecording)
         }
 
         let result = SecurityResult(threats: threats)

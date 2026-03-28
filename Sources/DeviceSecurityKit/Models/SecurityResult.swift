@@ -26,6 +26,10 @@ public struct SecurityResult: Equatable {
     public var isReverseEngineered: Bool {
         return threats.contains(.reverseEngineering)
     }
-    
+
+    public var isScreenRecorded: Bool {
+        return threats.contains(.screenRecording)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }

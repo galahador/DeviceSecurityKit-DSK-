@@ -5,8 +5,9 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case debugger
     case emulator
     case reverseEngineering
+    case screenRecording
     case noThreat
-    
+
     public var description: String {
         switch self {
         case .jailbreak:
@@ -17,11 +18,13 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Running in emulator"
         case .reverseEngineering:
             return "App tampering detected"
+        case .screenRecording:
+            return "Screen is being recorded"
         case .noThreat:
             return "App is Secure"
         }
     }
-    
+
     public var severity: ThreatSeverity {
         switch self {
         case .jailbreak:
@@ -30,6 +33,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return .high
         case .reverseEngineering:
             return .critical
+        case .screenRecording:
+            return .high
         case .emulator:
             return .medium
         case .noThreat:
