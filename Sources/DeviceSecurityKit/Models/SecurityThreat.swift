@@ -6,6 +6,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case emulator
     case reverseEngineering
     case screenRecording
+    case hooked
     case noThreat
 
     public var description: String {
@@ -20,6 +21,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "App tampering detected"
         case .screenRecording:
             return "Screen is being recorded"
+        case .hooked:
+            return "Security functions have been hooked"
         case .noThreat:
             return "App is Secure"
         }
@@ -29,10 +32,12 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
         switch self {
         case .jailbreak:
             return .critical
-        case .debugger:
-            return .high
         case .reverseEngineering:
             return .critical
+        case .hooked:
+            return .critical
+        case .debugger:
+            return .high
         case .screenRecording:
             return .high
         case .emulator:

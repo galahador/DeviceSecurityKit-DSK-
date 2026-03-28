@@ -31,5 +31,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.screenRecording)
     }
 
+    public var isFunctionHooked: Bool {
+        return threats.contains(.hooked)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }
