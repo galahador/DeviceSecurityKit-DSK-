@@ -39,14 +39,14 @@ Detect jailbreak, debugger, emulator, screen recording, and reverse engineering 
    ```
    https://github.com/galahador/DeviceSecurityKit-DSK-.git
    ```
-3. Set version: `from: "0.6.0"`
+3. Set version: `from: "0.7.0"`
 4. Click **Add Package**
 
 ### `Package.swift`
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.6.0")
+    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.7.0")
 ]
 ```
 
