@@ -93,6 +93,10 @@ public final class SecurityMonitor: SecurityMonitorType {
             threats.append(.screenRecording)
         }
 
+        if configuration.hookDetectionEnabled && HookDetector.isFunctionHooked() {
+            threats.append(.hooked)
+        }
+
         let result = SecurityResult(threats: threats)
         updateStatus(from: result)
         hasPerformedInitialCheck = true
@@ -166,6 +170,8 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isDebuggerAttached { return .debuggerAttached }
         if result.isEmulator { return .emulator }
         if result.isReverseEngineered { return .reverseEngineered }
+        if result.isScreenRecorded { return .screenRecording }
+        if result.isFunctionHooked { return .hooked }
         return .compromised
     }
 }
