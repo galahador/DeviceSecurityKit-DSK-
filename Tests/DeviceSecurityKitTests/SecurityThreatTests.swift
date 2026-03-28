@@ -7,6 +7,7 @@ final class SecurityThreatTests: XCTestCase {
         XCTAssertEqual(SecurityThreat.jailbreak.severity, .critical)
         XCTAssertEqual(SecurityThreat.reverseEngineering.severity, .critical)
         XCTAssertEqual(SecurityThreat.hooked.severity, .critical)
+        XCTAssertEqual(SecurityThreat.pinningBypassed.severity, .critical)
         XCTAssertEqual(SecurityThreat.debugger.severity, .high)
         XCTAssertEqual(SecurityThreat.screenRecording.severity, .high)
         XCTAssertEqual(SecurityThreat.emulator.severity, .medium)
@@ -34,7 +35,7 @@ final class SecurityThreatTests: XCTestCase {
     }
 
     func testAllCasesCount() {
-        XCTAssertEqual(SecurityThreat.allCases.count, 7)
+        XCTAssertEqual(SecurityThreat.allCases.count, 8)
         let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger, .screenRecording]
         XCTAssertEqual(set.count, 3)
     }
