@@ -266,7 +266,12 @@ public final class EmulatorDetector {
     // MARK: - Helper Methods
 
     private static func getDeviceModelIdentifier() -> String {
-        return cacheQueue.sync {
+        // Fast path: concurrent read — no barrier needed for a simple read.
+        if let cached = cacheQueue.sync(execute: { cachedDeviceModel }) {
+            return cached
+        }
+
+        return cacheQueue.sync(flags: .barrier) {
             if let cached = cachedDeviceModel {
                 return cached
             }
@@ -279,10 +284,7 @@ public final class EmulatorDetector {
                 }
             }
 
-            cacheQueue.async(flags: .barrier) {
-                cachedDeviceModel = identifier
-            }
-
+            cachedDeviceModel = identifier
             return identifier
         }
     }
