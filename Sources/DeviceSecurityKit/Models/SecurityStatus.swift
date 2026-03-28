@@ -7,6 +7,8 @@ public enum SecurityStatus: Equatable {
     case emulator
     case reverseEngineered
     case screenRecording
+    case hooked
+    case pinningBypassed
     case compromised
 
     public var isSecure: Bool {
@@ -27,6 +29,10 @@ public enum SecurityStatus: Equatable {
             return "App has been tampered"
         case .screenRecording:
             return "Screen is being recorded"
+        case .hooked:
+            return "Security functions have been hooked"
+        case .pinningBypassed:
+            return "Certificate pinning has been bypassed"
         case .compromised:
             return "Device is compromised"
         }
