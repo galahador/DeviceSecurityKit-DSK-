@@ -39,5 +39,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.pinningBypassed)
     }
 
+    public var isVPNOrProxyActive: Bool {
+        return threats.contains(.vpnProxy)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }

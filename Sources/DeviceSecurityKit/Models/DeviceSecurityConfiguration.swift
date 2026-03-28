@@ -8,6 +8,7 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var screenRecordingCheckEnabled: Bool
     public var hookDetectionEnabled: Bool
     public var pinningBypassDetectionEnabled: Bool
+    public var vpnProxyDetectionEnabled: Bool
 
     public init(
         jailbreakCheckEnabled: Bool = true,
@@ -16,7 +17,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         reverseEngineeringCheckEnabled: Bool = true,
         screenRecordingCheckEnabled: Bool = true,
         hookDetectionEnabled: Bool = true,
-        pinningBypassDetectionEnabled: Bool = true
+        pinningBypassDetectionEnabled: Bool = true,
+        vpnProxyDetectionEnabled: Bool = true
     ) {
         self.jailbreakCheckEnabled = jailbreakCheckEnabled
         self.debuggerCheckEnabled = debuggerCheckEnabled
@@ -25,6 +27,7 @@ public struct DeviceSecurityConfiguration: Equatable {
         self.screenRecordingCheckEnabled = screenRecordingCheckEnabled
         self.hookDetectionEnabled = hookDetectionEnabled
         self.pinningBypassDetectionEnabled = pinningBypassDetectionEnabled
+        self.vpnProxyDetectionEnabled = vpnProxyDetectionEnabled
     }
     
     // MARK: - Presets
@@ -97,6 +100,12 @@ public struct DeviceSecurityConfiguration: Equatable {
     public func withPinningBypassDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
         var config = self
         config.pinningBypassDetectionEnabled = enabled
+        return config
+    }
+
+    public func withVPNProxyDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
+        var config = self
+        config.vpnProxyDetectionEnabled = enabled
         return config
     }
 }
