@@ -34,6 +34,6 @@ public struct SecurityResult: Equatable {
     public var isFunctionHooked: Bool {
         return threats.contains(.hooked)
     }
-
+    
     public static let secure = SecurityResult(threats: [])
 }
