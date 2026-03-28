@@ -88,11 +88,4 @@ struct JailbreakListOptions {
         "/var/jb/jb_test.txt",
         "/usr/bin/jb_test.txt"
     ]
-
-    let jailbreakPaths = [
-        "/var/jb",
-        "/Library/MobileSubstrate",
-        "/usr/lib/libhooker.dylib",
-        "/private/preboot"
-    ]
 }
