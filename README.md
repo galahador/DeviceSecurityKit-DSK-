@@ -30,15 +30,6 @@ Detect jailbreak, debugger, emulator, screen recording, and reverse engineering 
 | 🔄 **Monitoring** | Real-time continuous background checks |
 
 ---
-
-## Preview
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/galahador/DeviceSecurityKit-DSK-/develop/preview.gif" width="300" alt="DeviceSecurityKit Demo" />
-</p>
-
----
-
 ## Installation
 
 ### Swift Package Manager (Xcode)
