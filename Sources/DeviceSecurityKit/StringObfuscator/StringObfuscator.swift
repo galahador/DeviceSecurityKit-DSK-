@@ -1,24 +1,5 @@
 import Foundation
 
-/// XOR-based string obfuscator that decodes threat-signature strings at runtime.
-///
-/// Sensitive strings (library names, environment variable names, bundle paths) are
-/// stored as XOR-encoded byte arrays so they do not appear as plaintext in the
-/// compiled binary. A static analysis tool running `strings` on the binary will
-/// see only non-printable bytes instead of recognisable names like "FridaGadget"
-/// or "DYLD_INSERT_LIBRARIES".
-///
-/// Usage — decoding:
-/// ```swift
-/// let name = StringObfuscator.shared.reveal([0xEC, 0xD8, 0xC3, 0xCE, 0xCB, 0xED, 0xCB, 0xCE, 0xCD, 0xCF, 0xDE])
-/// // name == "FridaGadget"
-/// ```
-///
-/// Usage — generating new encoded constants (DEBUG builds only):
-/// ```swift
-/// let encoded = StringObfuscator.shared.conceal("NewLibraryName")
-/// print(encoded) // paste the resulting array as a new constant
-/// ```
 internal struct StringObfuscator {
 
     // MARK: - Shared instance
