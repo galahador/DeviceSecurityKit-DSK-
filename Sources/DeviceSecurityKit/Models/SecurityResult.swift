@@ -34,6 +34,10 @@ public struct SecurityResult: Equatable {
     public var isFunctionHooked: Bool {
         return threats.contains(.hooked)
     }
-    
+
+    public var isPinningBypassed: Bool {
+        return threats.contains(.pinningBypassed)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }

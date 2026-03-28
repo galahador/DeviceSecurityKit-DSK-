@@ -97,6 +97,10 @@ public final class SecurityMonitor: SecurityMonitorType {
             threats.append(.hooked)
         }
 
+        if configuration.pinningBypassDetectionEnabled && CertificatePinningDetector.isPinningBypassed() {
+            threats.append(.pinningBypassed)
+        }
+
         let result = SecurityResult(threats: threats)
         updateStatus(from: result)
         hasPerformedInitialCheck = true
@@ -172,6 +176,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isReverseEngineered { return .reverseEngineered }
         if result.isScreenRecorded { return .screenRecording }
         if result.isFunctionHooked { return .hooked }
+        if result.isPinningBypassed { return .pinningBypassed }
         return .compromised
     }
 }
