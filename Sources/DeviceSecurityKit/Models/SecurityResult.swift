@@ -8,7 +8,7 @@ public struct SecurityResult: Equatable {
     }
     
     public var isSecure: Bool {
-        return threats.contains(.noThreat)
+        return threats.isEmpty || !threats.contains(where: { $0 != .noThreat })
     }
     
     public var isJailbroken: Bool {
