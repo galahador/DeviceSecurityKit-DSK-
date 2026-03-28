@@ -8,6 +8,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case screenRecording
     case hooked
     case pinningBypassed
+    case vpnProxy
     case noThreat
 
     public var description: String {
@@ -26,6 +27,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Security functions have been hooked"
         case .pinningBypassed:
             return "Certificate pinning bypass detected"
+        case .vpnProxy:
+            return "VPN or proxy connection detected"
         case .noThreat:
             return "App is Secure"
         }
@@ -46,6 +49,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
         case .screenRecording:
             return .high
         case .emulator:
+            return .medium
+        case .vpnProxy:
             return .medium
         case .noThreat:
             return .normal
