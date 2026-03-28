@@ -23,7 +23,7 @@ public final class JailbreakDetector {
     // MARK: - Private Detection Methods
     
     private static func checkJailbreakFiles() -> Bool {
-        for path in jailbreakListOptions.jailbreakPaths {
+        for path in jailbreakListOptions.suspiciousPaths {
             if FileManager.default.fileExists(atPath: path) {
                 return true
             }
@@ -78,7 +78,6 @@ public final class JailbreakDetector {
         return false
     }
     
-    /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
     private static func checkSuspiciousEnvironmentVars() -> Bool {
         for envVar in jailbreakListOptions.suspiciousVars {
             if getenv(envVar) != nil {
