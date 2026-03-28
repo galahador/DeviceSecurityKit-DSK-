@@ -23,7 +23,7 @@ Click Add Package
 
 # Swift Package Manager
 swiftdependencies: [
-    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.1.0")
+    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.3.0")
 ]
 
 ## Info.plist Configuration (Optional)

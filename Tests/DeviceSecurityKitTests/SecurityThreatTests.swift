@@ -18,6 +18,7 @@ final class SecurityThreatTests: XCTestCase {
         XCTAssertLessThan(ThreatSeverity.medium, .high)
         XCTAssertLessThan(ThreatSeverity.high, .critical)
         XCTAssertGreaterThan(ThreatSeverity.critical, .normal)
+        XCTAssertEqual(SecurityThreat.emulator.severity, .medium)
     }
 
     func testDescriptions_nonEmpty() {
@@ -33,5 +34,7 @@ final class SecurityThreatTests: XCTestCase {
 
     func testAllCasesCount() {
         XCTAssertEqual(SecurityThreat.allCases.count, 6)
+        let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger]
+        XCTAssertEqual(set.count, 2)
     }
 }
