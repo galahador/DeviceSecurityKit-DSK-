@@ -63,8 +63,6 @@ public final class JailbreakDetector {
     }
 
     // MARK: - URL Scheme Checker
-    /// The host app must also declare the jailbreak URL schemes in LSApplicationQueriesSchemes
-    /// in its Info.plist, otherwise canOpenURL always returns false on iOS 9+.
     public static var urlSchemeChecker: ((URL) -> Bool)?
 
     // MARK: - Public
@@ -112,8 +110,6 @@ public final class JailbreakDetector {
         return false
     }
 
-    /// Checks for jailbreak-related URL schemes using the injected urlSchemeChecker.
-    /// Silently skipped if urlSchemeChecker has not been set.
     private static func checkSuspiciousURLSchemes() -> Bool {
         guard let checker = urlSchemeChecker else { return false }
 
@@ -152,9 +148,6 @@ public final class JailbreakDetector {
         return false
     }
 
-    /// Sandboxed iOS apps cannot fork(). A successful fork means the sandbox has been bypassed.
-    /// fork() is loaded dynamically to bypass the Swift compile-time unavailability restriction —
-    /// the kernel still exposes it, so this tests whether the sandbox actually blocks the syscall.
     private static func checkForkCapability() -> Bool {
         typealias ForkType = @convention(c) () -> pid_t
 
@@ -171,10 +164,11 @@ public final class JailbreakDetector {
         return pid > 0
     }
 
-    /// Scans /private/preboot/<uuid>/jb paths used by rootless jailbreaks (dopamine, palera1n).
-    /// FileManager does not expand glob patterns, so each UUID directory is enumerated manually.
+    private static let prebootPath = StringObfuscator.shared.reveal(
+        [0x85, 0xDA, 0xD8, 0xC3, 0xDC, 0xCB, 0xDE, 0xCF, 0x85, 0xDA, 0xD8, 0xCF, 0xC8, 0xC5, 0xC5, 0xDE]
+    )
+
     private static func checkPrebootJailbreakPaths() -> Bool {
-        let prebootPath = "/private/preboot"
         guard let entries = try? FileManager.default.contentsOfDirectory(atPath: prebootPath) else {
             return false
         }
