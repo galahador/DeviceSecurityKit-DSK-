@@ -1,34 +1,61 @@
 # DeviceSecurityKit
 
-A lightweight iOS security detection library for Swift. Detect jailbreak, debugger, emulator, and reverse engineering attempts with zero dependencies.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/galahador/DeviceSecurityKit-DSK-/develop/DSK%20Image.png" width="340" alt="DeviceSecurityKit" />
+</p>
 
-**Free & Open Source** — This library is completely free and will always remain free. No premium tiers, no hidden costs, no subscriptions. Ever.
+> Lightweight iOS security detection. Zero dependencies. Always free.
 
-# Features
-🔒 Jailbreak Detection - Files, sandbox, URL schemes, symlinks
-🐛 Debugger Detection - sysctl, ptrace
-📱 Emulator Detection - Simulator environment detection
-🔧 Reverse Engineering Detection - Frida, Substrate, libhooker, env vars
-⚡ Lightweight - No dependencies, minimal footprint
-🎯 Simple API - One-line checks or detailed results
-🔄 Continuous Monitoring - Optional background monitoring
+[![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat&logo=swift&logoColor=white)](https://swift.org)
+[![iOS 15.0+](https://img.shields.io/badge/iOS-15.0+-000000?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![MIT License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+[![SPM Compatible](https://img.shields.io/badge/SPM-compatible-4BC51D?style=flat)](https://swift.org/package-manager/)
 
-# Installation
-Swift Package Manager
-Add to your project via Xcode:
+Detect jailbreak, debugger, emulator, and reverse engineering attempts with a single import.
 
-File → Add Package Dependencies
-Enter URL: https://github.com/galahador/DeviceSecurityKit-DSK-.git
-Click Add Package
+---
 
-# Swift Package Manager
-swiftdependencies: [
+## Features
+
+| Detection | What it checks |
+|-----------|---------------|
+| 🔒 **Jailbreak** | Files, sandbox escape, URL schemes, symlinks |
+| 🐛 **Debugger** | `sysctl`, `ptrace` |
+| 📱 **Emulator** | Simulator environment variables |
+| 🔧 **Reverse Engineering** | Frida, Substrate, libhooker, env vars |
+| 🔄 **Monitoring** | Optional continuous background checks |
+| 🖥️ **Screen Recording** | For Recording | 
+
+---
+
+## Installation
+
+### Swift Package Manager (Xcode)
+
+1. **File → Add Package Dependencies**
+2. Enter the URL:
+   ```
+   https://github.com/galahador/DeviceSecurityKit-DSK-.git
+   ```
+3. Set version: `from: "0.3.0"`
+4. Click **Add Package**
+
+### `Package.swift`
+
+```swift
+dependencies: [
     .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.3.0")
 ]
+```
 
-## Info.plist Configuration (Optional)
-For URL scheme detection to work fully, add to your app's Info.plist:
-xml<key>LSApplicationQueriesSchemes</key>
+---
+
+## Info.plist Configuration
+
+Add this to enable URL scheme detection. Without it, scheme checks silently return `false` — no crash.
+
+```xml
+<key>LSApplicationQueriesSchemes</key>
 <array>
     <string>cydia</string>
     <string>sileo</string>
@@ -40,19 +67,26 @@ xml<key>LSApplicationQueriesSchemes</key>
     <string>odyssey</string>
     <string>dopamine</string>
 </array>
+```
 
-Note: Without this, URL scheme checks silently return false (no crash).
+---
 
 ## Requirements
-- iOS 15.0+
-- Swift 5.9+
-- Xcode 15.0+
 
-### Contributing
-Contributions are welcome! Please open an issue or submit a pull request.
+- **iOS** 15.0+
+- **Swift** 5.9+
+- **Xcode** 15.0+
+
+---
+
+## Contributing
+
+Issues and PRs are welcome. Open an issue first for major changes.
 
 ## License
-MIT License
 
-## Author
-Created by galahador
+[MIT](LICENSE) — Created by [galahador](https://github.com/galahador)
+
+---
+
+**Free & open source. No premium tiers, no subscriptions. Ever.**

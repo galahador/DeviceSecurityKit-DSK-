@@ -5,17 +5,20 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var debuggerCheckEnabled: Bool
     public var emulatorCheckEnabled: Bool
     public var reverseEngineeringCheckEnabled: Bool
-    
+    public var screenRecordingCheckEnabled: Bool
+
     public init(
         jailbreakCheckEnabled: Bool = true,
         debuggerCheckEnabled: Bool = true,
         emulatorCheckEnabled: Bool = true,
-        reverseEngineeringCheckEnabled: Bool = true
+        reverseEngineeringCheckEnabled: Bool = true,
+        screenRecordingCheckEnabled: Bool = true
     ) {
         self.jailbreakCheckEnabled = jailbreakCheckEnabled
         self.debuggerCheckEnabled = debuggerCheckEnabled
         self.emulatorCheckEnabled = emulatorCheckEnabled
         self.reverseEngineeringCheckEnabled = reverseEngineeringCheckEnabled
+        self.screenRecordingCheckEnabled = screenRecordingCheckEnabled
     }
     
     // MARK: - Presets
@@ -70,6 +73,12 @@ public struct DeviceSecurityConfiguration: Equatable {
     public func withReverseEngineeringCheck(_ enabled: Bool) -> DeviceSecurityConfiguration {
         var config = self
         config.reverseEngineeringCheckEnabled = enabled
+        return config
+    }
+
+    public func withScreenRecordingCheck(_ enabled: Bool) -> DeviceSecurityConfiguration {
+        var config = self
+        config.screenRecordingCheckEnabled = enabled
         return config
     }
 }

@@ -7,14 +7,18 @@ final class SecurityThreatTests: XCTestCase {
         XCTAssertEqual(SecurityThreat.jailbreak.severity, .critical)
         XCTAssertEqual(SecurityThreat.reverseEngineering.severity, .critical)
         XCTAssertEqual(SecurityThreat.debugger.severity, .high)
+        XCTAssertEqual(SecurityThreat.screenRecording.severity, .high)
         XCTAssertEqual(SecurityThreat.emulator.severity, .medium)
+        XCTAssertEqual(SecurityThreat.noThreat.severity, .normal)
     }
 
     func testSeverityComparison() {
+        XCTAssertLessThan(ThreatSeverity.normal, .low)
         XCTAssertLessThan(ThreatSeverity.low, .medium)
         XCTAssertLessThan(ThreatSeverity.medium, .high)
         XCTAssertLessThan(ThreatSeverity.high, .critical)
-        XCTAssertGreaterThan(ThreatSeverity.critical, .low)
+        XCTAssertGreaterThan(ThreatSeverity.critical, .normal)
+        XCTAssertEqual(SecurityThreat.emulator.severity, .medium)
     }
 
     func testDescriptions_nonEmpty() {
@@ -24,11 +28,13 @@ final class SecurityThreatTests: XCTestCase {
     }
 
     func testHashable() {
-        let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger]
-        XCTAssertEqual(set.count, 2)
+        let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger, .screenRecording]
+        XCTAssertEqual(set.count, 3)
     }
 
     func testAllCasesCount() {
-        XCTAssertEqual(SecurityThreat.allCases.count, 4)
+        XCTAssertEqual(SecurityThreat.allCases.count, 6)
+        let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger]
+        XCTAssertEqual(set.count, 2)
     }
 }
