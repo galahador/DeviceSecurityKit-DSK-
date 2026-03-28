@@ -9,6 +9,7 @@ public enum SecurityStatus: Equatable {
     case screenRecording
     case hooked
     case pinningBypassed
+    case vpnProxy
     case compromised
 
     public var isSecure: Bool {
@@ -33,6 +34,8 @@ public enum SecurityStatus: Equatable {
             return "Security functions have been hooked"
         case .pinningBypassed:
             return "Certificate pinning has been bypassed"
+        case .vpnProxy:
+            return "VPN or proxy connection is active"
         case .compromised:
             return "Device is compromised"
         }

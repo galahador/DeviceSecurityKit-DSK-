@@ -101,6 +101,10 @@ public final class SecurityMonitor: SecurityMonitorType {
             threats.append(.pinningBypassed)
         }
 
+        if configuration.vpnProxyDetectionEnabled && VPNProxyDetector.isVPNOrProxyActive() {
+            threats.append(.vpnProxy)
+        }
+
         let result = SecurityResult(threats: threats)
         updateStatus(from: result)
         hasPerformedInitialCheck = true
@@ -177,6 +181,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isScreenRecorded { return .screenRecording }
         if result.isFunctionHooked { return .hooked }
         if result.isPinningBypassed { return .pinningBypassed }
+        if result.isVPNOrProxyActive { return .vpnProxy }
         return .compromised
     }
 }
