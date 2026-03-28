@@ -7,6 +7,7 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var reverseEngineeringCheckEnabled: Bool
     public var screenRecordingCheckEnabled: Bool
     public var hookDetectionEnabled: Bool
+    public var pinningBypassDetectionEnabled: Bool
 
     public init(
         jailbreakCheckEnabled: Bool = true,
@@ -14,7 +15,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         emulatorCheckEnabled: Bool = true,
         reverseEngineeringCheckEnabled: Bool = true,
         screenRecordingCheckEnabled: Bool = true,
-        hookDetectionEnabled: Bool = true
+        hookDetectionEnabled: Bool = true,
+        pinningBypassDetectionEnabled: Bool = true
     ) {
         self.jailbreakCheckEnabled = jailbreakCheckEnabled
         self.debuggerCheckEnabled = debuggerCheckEnabled
@@ -22,6 +24,7 @@ public struct DeviceSecurityConfiguration: Equatable {
         self.reverseEngineeringCheckEnabled = reverseEngineeringCheckEnabled
         self.screenRecordingCheckEnabled = screenRecordingCheckEnabled
         self.hookDetectionEnabled = hookDetectionEnabled
+        self.pinningBypassDetectionEnabled = pinningBypassDetectionEnabled
     }
     
     // MARK: - Presets
@@ -88,6 +91,12 @@ public struct DeviceSecurityConfiguration: Equatable {
     public func withHookDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
         var config = self
         config.hookDetectionEnabled = enabled
+        return config
+    }
+
+    public func withPinningBypassDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
+        var config = self
+        config.pinningBypassDetectionEnabled = enabled
         return config
     }
 }

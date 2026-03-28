@@ -7,6 +7,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case reverseEngineering
     case screenRecording
     case hooked
+    case pinningBypassed
     case noThreat
 
     public var description: String {
@@ -23,6 +24,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Screen is being recorded"
         case .hooked:
             return "Security functions have been hooked"
+        case .pinningBypassed:
+            return "Certificate pinning bypass detected"
         case .noThreat:
             return "App is Secure"
         }
@@ -35,6 +38,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
         case .reverseEngineering:
             return .critical
         case .hooked:
+            return .critical
+        case .pinningBypassed:
             return .critical
         case .debugger:
             return .high
