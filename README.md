@@ -44,7 +44,7 @@ Detect jailbreak, debugger, emulator, and reverse engineering attempts with a si
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.3.0")
+    .package(url: "https://github.com/galahador/DeviceSecurityKit-DSK-.git", from: "0.4.0")
 ]
 ```
 
