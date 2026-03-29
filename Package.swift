@@ -16,7 +16,10 @@ let package = Package(
         .target(
             name: "DeviceSecurityKit",
             dependencies: [],
-            path: "Sources"
+            path: "Sources",
+            linkerSettings: [
+                .linkedFramework("NetworkExtension")
+            ]
         ),
         .testTarget(
             name: "DeviceSecurityKitTests",

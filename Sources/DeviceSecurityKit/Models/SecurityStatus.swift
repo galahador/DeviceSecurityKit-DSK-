@@ -6,6 +6,7 @@ public enum SecurityStatus: Equatable {
     case debuggerAttached
     case emulator
     case reverseEngineered
+    case appIntegrityCompromised
     case screenRecording
     case hooked
     case pinningBypassed
@@ -28,6 +29,8 @@ public enum SecurityStatus: Equatable {
             return "Running in emulator"
         case .reverseEngineered:
             return "App has been tampered"
+        case .appIntegrityCompromised:
+            return "App signature integrity compromised"
         case .screenRecording:
             return "Screen is being recorded"
         case .hooked:

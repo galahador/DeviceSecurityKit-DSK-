@@ -5,6 +5,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case debugger
     case emulator
     case reverseEngineering
+    case appIntegrity
     case screenRecording
     case hooked
     case pinningBypassed
@@ -21,6 +22,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Running in emulator"
         case .reverseEngineering:
             return "App tampering detected"
+        case .appIntegrity:
+            return "App signature integrity compromised"
         case .screenRecording:
             return "Screen is being recorded"
         case .hooked:
@@ -39,6 +42,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
         case .jailbreak:
             return .critical
         case .reverseEngineering:
+            return .critical
+        case .appIntegrity:
             return .critical
         case .hooked:
             return .critical

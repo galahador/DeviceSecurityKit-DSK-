@@ -5,6 +5,8 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var debuggerCheckEnabled: Bool
     public var emulatorCheckEnabled: Bool
     public var reverseEngineeringCheckEnabled: Bool
+    public var appIntegrityCheckEnabled: Bool
+    public var expectedTeamID: String?
     public var screenRecordingCheckEnabled: Bool
     public var hookDetectionEnabled: Bool
     public var pinningBypassDetectionEnabled: Bool
@@ -15,6 +17,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         debuggerCheckEnabled: Bool = true,
         emulatorCheckEnabled: Bool = true,
         reverseEngineeringCheckEnabled: Bool = true,
+        appIntegrityCheckEnabled: Bool = true,
+        expectedTeamID: String? = nil,
         screenRecordingCheckEnabled: Bool = true,
         hookDetectionEnabled: Bool = true,
         pinningBypassDetectionEnabled: Bool = true,
@@ -24,6 +28,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         self.debuggerCheckEnabled = debuggerCheckEnabled
         self.emulatorCheckEnabled = emulatorCheckEnabled
         self.reverseEngineeringCheckEnabled = reverseEngineeringCheckEnabled
+        self.appIntegrityCheckEnabled = appIntegrityCheckEnabled
+        self.expectedTeamID = expectedTeamID
         self.screenRecordingCheckEnabled = screenRecordingCheckEnabled
         self.hookDetectionEnabled = hookDetectionEnabled
         self.pinningBypassDetectionEnabled = pinningBypassDetectionEnabled
@@ -56,7 +62,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         jailbreakCheckEnabled: false,
         debuggerCheckEnabled: false,
         emulatorCheckEnabled: false,
-        reverseEngineeringCheckEnabled: false
+        reverseEngineeringCheckEnabled: false,
+        appIntegrityCheckEnabled: false
     )
     
     // MARK: - Builder Pattern
@@ -106,6 +113,13 @@ public struct DeviceSecurityConfiguration: Equatable {
     public func withVPNProxyDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
         var config = self
         config.vpnProxyDetectionEnabled = enabled
+        return config
+    }
+
+    public func withAppIntegrityCheck(_ enabled: Bool, expectedTeamID: String? = nil) -> DeviceSecurityConfiguration {
+        var config = self
+        config.appIntegrityCheckEnabled = enabled
+        config.expectedTeamID = expectedTeamID
         return config
     }
 }
