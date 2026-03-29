@@ -87,6 +87,10 @@ public final class SecurityMonitor: SecurityMonitorType {
             threats.append(.reverseEngineering)
         }
 
+        if configuration.appIntegrityCheckEnabled && AppIntegrityDetector.isIntegrityCompromised(expectedTeamID: configuration.expectedTeamID) {
+            threats.append(.appIntegrity)
+        }
+
         if configuration.screenRecordingCheckEnabled,
            let provider = screenRecordingProvider,
            provider.isScreenBeingRecorded() {
@@ -178,6 +182,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isDebuggerAttached { return .debuggerAttached }
         if result.isEmulator { return .emulator }
         if result.isReverseEngineered { return .reverseEngineered }
+        if result.isAppIntegrityCompromised { return .appIntegrityCompromised }
         if result.isScreenRecorded { return .screenRecording }
         if result.isFunctionHooked { return .hooked }
         if result.isPinningBypassed { return .pinningBypassed }

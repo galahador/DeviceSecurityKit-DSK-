@@ -43,5 +43,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.vpnProxy)
     }
 
+    public var isAppIntegrityCompromised: Bool {
+        return threats.contains(.appIntegrity)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }
