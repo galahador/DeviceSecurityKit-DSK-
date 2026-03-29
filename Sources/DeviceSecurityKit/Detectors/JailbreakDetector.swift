@@ -140,15 +140,21 @@ public final class JailbreakDetector {
 
     /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
     private static func checkSuspiciousEnvironmentVars() -> Bool {
+#if DEBUG
+        // Xcode injects DYLD_INSERT_LIBRARIES (e.g. Main Thread Checker) in debug builds.
+        return false
+#else
         for envVar in jailbreakListOptions.suspiciousVars {
             if getenv(envVar) != nil {
                 return true
             }
         }
         return false
+#endif
     }
 
     private static func checkForkCapability() -> Bool {
+#if os(iOS) && !targetEnvironment(simulator)
         typealias ForkType = @convention(c) () -> pid_t
 
         guard let handle = dlopen(nil, RTLD_NOW),
@@ -162,6 +168,9 @@ public final class JailbreakDetector {
             exit(0)
         }
         return pid > 0
+#else
+        return false
+#endif
     }
 
     private static let prebootPath = StringObfuscator.shared.reveal(

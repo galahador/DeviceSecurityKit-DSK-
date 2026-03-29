@@ -27,6 +27,13 @@ public final class VPNProxyDetector {
 
         var cursor: UnsafeMutablePointer<ifaddrs>? = first
         while let current = cursor {
+            let flags = Int32(current.pointee.ifa_flags)
+            let isUp = (flags & IFF_UP) != 0
+            let isRunning = (flags & IFF_RUNNING) != 0
+            guard isUp && isRunning else {
+                cursor = current.pointee.ifa_next
+                continue
+            }
             if let namePtr = current.pointee.ifa_name {
                 let name = String(cString: namePtr)
                 for prefix in vpnPrefixes {
