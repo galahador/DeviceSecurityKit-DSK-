@@ -1,6 +1,7 @@
 import Foundation
 import Darwin
 import CFNetwork
+import NetworkExtension
 
 public final class VPNProxyDetector {
 
@@ -14,38 +15,11 @@ public final class VPNProxyDetector {
     }
 
     private static func checkVPNInterfaces() -> Bool {
-        let vpnPrefixes = [
-            o.reveal([0xDF, 0xDE, 0xDF, 0xC4]),
-            o.reveal([0xDA, 0xDA, 0xDA]),
-            o.reveal([0xC3, 0xDA, 0xD9, 0xCF, 0xC9]),
-            o.reveal([0xDE, 0xDF, 0xC4]),
-        ]
-
-        var ifaddr: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&ifaddr) == 0, let first = ifaddr else { return false }
-        defer { freeifaddrs(ifaddr) }
-
-        var cursor: UnsafeMutablePointer<ifaddrs>? = first
-        while let current = cursor {
-            let flags = Int32(current.pointee.ifa_flags)
-            let isUp = (flags & IFF_UP) != 0
-            let isRunning = (flags & IFF_RUNNING) != 0
-            guard isUp && isRunning else {
-                cursor = current.pointee.ifa_next
-                continue
-            }
-            if let namePtr = current.pointee.ifa_name {
-                let name = String(cString: namePtr)
-                for prefix in vpnPrefixes {
-                    if name.hasPrefix(prefix) {
-                        logger.warning("VPN interface detected: \(name)")
-                        return true
-                    }
-                }
-            }
-            cursor = current.pointee.ifa_next
+        let status = NEVPNManager.shared().connection.status
+        if status == .connected || status == .connecting || status == .reasserting {
+            logger.warning("VPN connection detected via NEVPNManager: status \(status.rawValue)")
+            return true
         }
-
         return false
     }
 
