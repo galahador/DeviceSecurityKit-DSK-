@@ -54,32 +54,63 @@ dependencies: [
 
 ## Usage
 
-### Quick Check
+### Quick Start
+
+The recommended way to use DSK is via `DSK.shared`. Set it up once in `AppDelegate` or your app entry point:
 
 ```swift
-let monitor = SecurityMonitor()
-if monitor.isSecure() {
-    // Safe to proceed
-} else {
-    let result = monitor.performCheck()
-    print(result.threats)
-}
+DSK.shared
+    .configure(.production)
+    .onThreatDetected { threat in
+        print("Threat: \(threat.description) — severity: \(threat.severity)")
+    }
+    .onStatusChange { status in
+        print("Security status: \(status)")
+    }
+    .start()
 ```
 
-### Continuous Monitoring
+### Responding to Threats
+
+Use `onThreatDetected` to act on each threat based on its severity:
 
 ```swift
-let monitor = SecurityMonitor()
+DSK.shared
+    .onThreatDetected { threat in
+        switch threat.severity {
+        case .critical:
+            // 1. Clear sensitive data first
+            AuthManager.shared.clearTokens()
+            KeychainManager.shared.wipe()
 
-monitor.onThreatDetected { threat in
-    print("Threat detected: \(threat)")
+            // 2. Optionally report to backend / analytics
+            Analytics.log("security_threat", ["type": threat.rawValue])
+
+            // 3. Terminate — exit(0) looks like a clean exit to the OS
+            exit(0)
+
+        case .high:
+            // Show blocking UI, force logout
+            showSecurityAlert()
+
+        default:
+            // Log and monitor, don't block the user
+            break
+        }
+    }
+    .start()
+```
+
+### One-Shot Check
+
+```swift
+let result = DSK.shared.performCheck()
+
+if result.isSecure {
+    // Safe to proceed
+} else {
+    print(result.threats) // [SecurityThreat]
 }
-
-monitor.onStatusChange { status in
-    print("Status changed: \(status)")
-}
-
-monitor.startMonitoring()
 ```
 
 ---
@@ -89,25 +120,20 @@ monitor.startMonitoring()
 ### Presets
 
 ```swift
-// All checks enabled (default)
-monitor.configure(.default)
-
-// Jailbreak only
-monitor.configure(.jailbreakOnly)
-
-// Recommended for production
-monitor.configure(.production)
-
-// Disable all checks
-monitor.configure(.disabled)
+DSK.shared
+    .configure(.default)    // All checks enabled
+    .configure(.production) // Jailbreak, debugger, emulator, reverse engineering
+    .configure(.jailbreakOnly) // Jailbreak detection only
+    .configure(.disabled)   // All checks off
+    .start()
 ```
 
-### Builder Pattern
+### Custom — Builder Pattern
 
-Fine-tune exactly what gets checked:
+Fine-tune exactly which checks run:
 
 ```swift
-let config = SecurityConfiguration()
+let config = DeviceSecurityConfiguration.default
     .withJailbreakCheck(true)
     .withDebuggerCheck(true)
     .withEmulatorCheck(false)
@@ -115,9 +141,19 @@ let config = SecurityConfiguration()
     .withScreenRecordingCheck(true)
     .withHookDetection(true)
     .withPinningBypassDetection(true)
-    .withVPNProxyDetection(false)
+    .withVPNProxyDetection(false) // disable if your app supports corporate VPN
 
-monitor.configure(config)
+DSK.shared
+    .configure(config)
+    .start()
+```
+
+### Monitoring Interval
+
+```swift
+DSK.shared
+    .monitoringInterval(30) // re-check every 30 seconds (default: 60)
+    .start()
 ```
 
 ---

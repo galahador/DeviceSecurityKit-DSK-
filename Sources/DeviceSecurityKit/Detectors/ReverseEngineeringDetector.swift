@@ -41,12 +41,16 @@ public final class ReverseEngineeringDetector {
     }
     
     private static func checkEnvironmentVariables() -> Bool {
+#if DEBUG
+        return false
+#else
         for varName in reverseEngineeringListsOptions.suspiciousVars {
             if let value = getenv(varName), String(cString: value).count > 0 {
                 return true
             }
         }
         return false
+#endif
     }
     
     private static let validBundlePrefixes: [String] = {
@@ -63,7 +67,7 @@ public final class ReverseEngineeringDetector {
         // Executable must still exist on disk — absence indicates tampering.
         guard FileManager.default.fileExists(atPath: executablePath) else { return true }
         
-#if !targetEnvironment(simulator)
+#if os(iOS) && !targetEnvironment(simulator)
         let bundlePath = Bundle.main.bundlePath
         if !validBundlePrefixes.contains(where: { bundlePath.hasPrefix($0) }) {
             return true
