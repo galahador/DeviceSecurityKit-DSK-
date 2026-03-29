@@ -176,17 +176,19 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     private func mapToStatus(_ result: SecurityResult) -> SecurityStatus {
         if result.isSecure { return .secure }
-        // Multiple simultaneous threats indicate a more serious compromise
-        if result.threats.count > 1 { return .compromised }
-        if result.isJailbroken { return .jailbroken }
-        if result.isDebuggerAttached { return .debuggerAttached }
-        if result.isEmulator { return .emulator }
-        if result.isReverseEngineered { return .reverseEngineered }
+
+        if result.isJailbroken            { return .jailbroken }
+        if result.isReverseEngineered     { return .reverseEngineered }
         if result.isAppIntegrityCompromised { return .appIntegrityCompromised }
-        if result.isScreenRecorded { return .screenRecording }
-        if result.isFunctionHooked { return .hooked }
-        if result.isPinningBypassed { return .pinningBypassed }
-        if result.isVPNOrProxyActive { return .vpnProxy }
+        if result.isFunctionHooked        { return .hooked }
+        if result.isPinningBypassed       { return .pinningBypassed }
+        // High
+        if result.isDebuggerAttached      { return .debuggerAttached }
+        if result.isScreenRecorded        { return .screenRecording }
+        // Medium
+        if result.isEmulator              { return .emulator }
+        if result.isVPNOrProxyActive      { return .vpnProxy }
+
         return .compromised
     }
 }
