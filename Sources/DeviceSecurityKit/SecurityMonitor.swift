@@ -127,6 +127,12 @@ public final class SecurityMonitor: SecurityMonitorType {
 
         isMonitoring = true
 
+#if !DEBUG
+        if configuration.debuggerCheckEnabled {
+            DebuggerDetector.startContinuousDenyAttach()
+        }
+#endif
+
         // Run an immediate first check so the caller isn't blind for the first interval
         runChecks()
 
@@ -147,6 +153,9 @@ public final class SecurityMonitor: SecurityMonitorType {
         monitoringTimer?.cancel()
         monitoringTimer = nil
         isMonitoring = false
+#if !DEBUG
+        DebuggerDetector.stopContinuousDenyAttach()
+#endif
     }
 
     // MARK: - Private
