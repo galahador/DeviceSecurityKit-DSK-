@@ -9,6 +9,9 @@ public final class DebuggerDetector {
     
     private static let detectionQueue = DispatchQueue(label: "DebuggerDetector.detection", attributes: .concurrent)
     private static var _isDetectionEnabled: Bool = true
+
+    private static let denyAttachQueue = DispatchQueue(label: "DebuggerDetector.denyAttach", qos: .background)
+    private static var denyAttachTimer: DispatchSourceTimer?
     
     /// debugger detection ( ON / OFF )
     public static var isDetectionEnabled: Bool {
@@ -20,6 +23,34 @@ public final class DebuggerDetector {
         }
     }
     
+    // MARK: - Continuous PT_DENY_ATTACH Hardening
+
+    /// Starts re-asserting PT_DENY_ATTACH on a background thread every `interval` seconds.
+    public static func startContinuousDenyAttach(interval: TimeInterval = 1.0) {
+#if !DEBUG
+        guard denyAttachTimer == nil else { return }
+
+        let timer = DispatchSource.makeTimerSource(queue: denyAttachQueue)
+        timer.schedule(deadline: .now(), repeating: interval)
+        timer.setEventHandler {
+            let PT_DENY_ATTACH: Int32 = 31
+            _ = ptrace(PT_DENY_ATTACH, 0, nil, 0)
+        }
+        timer.resume()
+        denyAttachTimer = timer
+        logger.debug("Continuous PT_DENY_ATTACH hardening started (interval: \(interval)s)")
+#endif
+    }
+
+    /// Stops the continuous PT_DENY_ATTACH background timer.
+    public static func stopContinuousDenyAttach() {
+#if !DEBUG
+        denyAttachTimer?.cancel()
+        denyAttachTimer = nil
+        logger.debug("Continuous PT_DENY_ATTACH hardening stopped")
+#endif
+    }
+
     /// Detects debugger attachment using multiple methods
     public static func isDebuggerAttached() -> Bool {
         guard isDetectionEnabled else {
