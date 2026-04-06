@@ -157,9 +157,9 @@ public final class JailbreakDetector {
 #if os(iOS) && !targetEnvironment(simulator)
         typealias ForkType = @convention(c) () -> pid_t
 
-        guard let handle = dlopen(nil, RTLD_NOW),
-              let sym = dlsym(handle, "fork") else { return false }
-        dlclose(handle)
+        guard let handle = dlopen(nil, RTLD_NOW) else { return false }
+        defer { dlclose(handle) }
+        guard let sym = dlsym(handle, "fork") else { return false }
 
         let forkFn = unsafeBitCast(sym, to: ForkType.self)
         let pid = forkFn()
