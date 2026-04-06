@@ -172,6 +172,9 @@ public final class SecurityMonitor: SecurityMonitorType {
         if cfg.vpnProxyDetectionEnabled && VPNProxyDetector.isVPNOrProxyActive() {
             threats.append(.vpnProxy)
         }
+        if cfg.swizzlingDetectionEnabled && SwizzlingDetector.isSwizzled() {
+            threats.append(.methodSwizzling)
+        }
 
         return SecurityResult(threats: threats)
     }
@@ -222,6 +225,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isReverseEngineered     { return .reverseEngineered }
         if result.isAppIntegrityCompromised { return .appIntegrityCompromised }
         if result.isFunctionHooked        { return .hooked }
+        if result.isMethodSwizzled        { return .methodSwizzled }
         if result.isPinningBypassed       { return .pinningBypassed }
         // High
         if result.isDebuggerAttached      { return .debuggerAttached }

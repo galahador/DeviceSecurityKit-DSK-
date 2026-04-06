@@ -47,5 +47,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.appIntegrity)
     }
 
+    public var isMethodSwizzled: Bool {
+        return threats.contains(.methodSwizzling)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }
