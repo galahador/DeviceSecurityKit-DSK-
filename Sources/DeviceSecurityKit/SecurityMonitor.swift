@@ -11,8 +11,9 @@ public final class SecurityMonitor: SecurityMonitorType {
     private var hasPerformedInitialCheck = false
     private var isMonitoring = false
     private var _status: SecurityStatus = .secure
-    // Tracks threats from the last cycle so onThreatDetected only fires for new threats
     private var _previousThreats: Set<SecurityThreat> = []
+    private var _lastThreatCallbackTime: [SecurityThreat: Date] = [:]
+    private var _threatCallbackThrottleInterval: TimeInterval = 300
 
     // MARK: - Handlers
     private var onStatusChange: ((SecurityStatus) -> Void)?
@@ -24,6 +25,11 @@ public final class SecurityMonitor: SecurityMonitorType {
     }
 
     public var monitoringInterval: TimeInterval = 60.0
+
+    public var threatCallbackThrottleInterval: TimeInterval {
+        get { stateQueue.sync { _threatCallbackThrottleInterval } }
+        set { stateQueue.sync(flags: .barrier) { _threatCallbackThrottleInterval = newValue } }
+    }
 
     public var screenRecordingProvider: ScreenRecordingProvider?
 
@@ -180,9 +186,18 @@ public final class SecurityMonitor: SecurityMonitorType {
         }
 
         let currentThreats = Set(result.threats)
-        let newThreats = Array(currentThreats.subtracting(_previousThreats))
+        let candidateThreats = currentThreats.subtracting(_previousThreats)
         _previousThreats = currentThreats
         hasPerformedInitialCheck = true
+        
+        let now = Date()
+        let newThreats = Array(candidateThreats.filter { threat in
+            guard let last = _lastThreatCallbackTime[threat] else { return true }
+            return now.timeIntervalSince(last) >= _threatCallbackThrottleInterval
+        })
+        for threat in newThreats {
+            _lastThreatCallbackTime[threat] = now
+        }
 
         return (statusChange, newThreats)
     }
