@@ -238,32 +238,28 @@ public final class DebuggerDetector {
     private static func checkBreakpointDetection() -> Bool {
 #if !DEBUG
         let functionPtr = unsafeBitCast(checkBreakpointDetection, to: UnsafeRawPointer.self)
-        let bytes = functionPtr.assumingMemoryBound(to: UInt8.self)
-        
-        for i in 0..<16 {
-            let byte = bytes.advanced(by: i).pointee
-            
-            #if arch(arm64)
-            if byte == 0xD4 {
-                if i + 3 < 16 {
-                    let word = UInt32(bytes.advanced(by: i).pointee) |
-                              (UInt32(bytes.advanced(by: i + 1).pointee) << 8) |
-                              (UInt32(bytes.advanced(by: i + 2).pointee) << 16) |
-                              (UInt32(bytes.advanced(by: i + 3).pointee) << 24)
-                    if (word & 0xFFE0001F) == 0xD4200000 {
-                        logger.info("ARM64 breakpoint instruction detected")
-                        return true
-                    }
-                }
+
+        #if arch(arm64)
+        let instructions = functionPtr.assumingMemoryBound(to: UInt32.self)
+        for i in 0..<4 {
+            let instr = instructions.advanced(by: i).pointee
+            // BRK #imm16 encoding: bits[31:21]=1101_0100_001, bits[4:0]=0_0000
+            if (instr & 0xFFE0001F) == 0xD4200000 {
+                logger.info("ARM64 breakpoint instruction detected")
+                return true
             }
-            #else
-            if byte == 0xCC {
+        }
+        #else
+        // x86/x64: INT3 is a single 0xCC byte
+        let bytes = functionPtr.assumingMemoryBound(to: UInt8.self)
+        for i in 0..<16 {
+            if bytes.advanced(by: i).pointee == 0xCC {
                 logger.info("x86/x64 breakpoint instruction detected")
                 return true
             }
-            #endif
         }
-        
+        #endif
+
         return false
 #else
         return false
