@@ -38,10 +38,8 @@ public struct DeviceSecurityConfiguration: Equatable {
     
     // MARK: - Presets
     
-    /// All checks enabled (default)
     public static let `default` = DeviceSecurityConfiguration()
     
-    /// Only jailbreak detection
     public static let jailbreakOnly = DeviceSecurityConfiguration(
         jailbreakCheckEnabled: true,
         debuggerCheckEnabled: false,
@@ -49,7 +47,6 @@ public struct DeviceSecurityConfiguration: Equatable {
         reverseEngineeringCheckEnabled: false
     )
     
-    /// Recommended for production apps
     public static let production = DeviceSecurityConfiguration(
         jailbreakCheckEnabled: true,
         debuggerCheckEnabled: true,
@@ -57,7 +54,6 @@ public struct DeviceSecurityConfiguration: Equatable {
         reverseEngineeringCheckEnabled: true
     )
     
-    /// All checks disabled
     public static let disabled = DeviceSecurityConfiguration(
         jailbreakCheckEnabled: false,
         debuggerCheckEnabled: false,

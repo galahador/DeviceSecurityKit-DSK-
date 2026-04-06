@@ -5,26 +5,37 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Private Properties
     private var monitoringTimer: DispatchSourceTimer?
     private let timerQueue = DispatchQueue(label: "com.devicesecuritykit.monitor", qos: .userInitiated)
+    private let stateQueue = DispatchQueue(label: "com.devicesecuritykit.monitor.state", qos: .userInitiated)
 
     private var configuration: DeviceSecurityConfiguration
     private var hasPerformedInitialCheck = false
     private var isMonitoring = false
     private var _status: SecurityStatus = .secure
-    // Tracks threats from the last cycle so onThreatDetected only fires for new threats
     private var _previousThreats: Set<SecurityThreat> = []
+    private var _lastThreatCallbackTime: [SecurityThreat: Date] = [:]
+    private var _threatCallbackThrottleInterval: TimeInterval = 300
 
-    // MARK: - Handlers
-    private var onStatusChange: ((SecurityStatus) -> Void)?
-    private var onThreatDetected: ((SecurityThreat) -> Void)?
+    // MARK: - Handlers (protected by stateQueue)
+    private var _onStatusChange: ((SecurityStatus) -> Void)?
+    private var _onThreatDetected: ((SecurityThreat) -> Void)?
+    private var _screenRecordingProvider: ScreenRecordingProvider? = DefaultScreenRecordingProvider()
 
     // MARK: - Public Properties
     public var status: SecurityStatus {
-        return _status
+        stateQueue.sync { _status }
     }
 
     public var monitoringInterval: TimeInterval = 60.0
 
-    public var screenRecordingProvider: ScreenRecordingProvider?
+    public var threatCallbackThrottleInterval: TimeInterval {
+        get { stateQueue.sync { _threatCallbackThrottleInterval } }
+        set { stateQueue.sync(flags: .barrier) { _threatCallbackThrottleInterval = newValue } }
+    }
+
+    public var screenRecordingProvider: ScreenRecordingProvider? {
+        get { stateQueue.sync { _screenRecordingProvider } }
+        set { stateQueue.sync(flags: .barrier) { _screenRecordingProvider = newValue } }
+    }
 
     // MARK: - Initialization
 
@@ -39,80 +50,37 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Configuration
 
     public func configure(_ configuration: DeviceSecurityConfiguration) {
-        self.configuration = configuration
+        stateQueue.sync { self.configuration = configuration }
 
-        if isMonitoring {
+        if stateQueue.sync(execute: { isMonitoring }) {
             runChecks()
         }
     }
 
     public func currentConfiguration() -> DeviceSecurityConfiguration {
-        return configuration
+        stateQueue.sync { configuration }
     }
 
     // MARK: - Handlers
 
     @discardableResult
     public func onStatusChange(_ handler: @escaping (SecurityStatus) -> Void) -> Self {
-        onStatusChange = handler
+        stateQueue.sync(flags: .barrier) { _onStatusChange = handler }
         return self
     }
 
     @discardableResult
     public func onThreatDetected(_ handler: @escaping (SecurityThreat) -> Void) -> Self {
-        onThreatDetected = handler
+        stateQueue.sync(flags: .barrier) { _onThreatDetected = handler }
         return self
     }
 
     // MARK: - Check Methods
 
     public func performCheck() -> SecurityResult {
-        var threats: [SecurityThreat] = []
-
-        if configuration.jailbreakCheckEnabled && JailbreakDetector.isJailbroken() {
-            threats.append(.jailbreak)
-        }
-
-        if configuration.debuggerCheckEnabled && DebuggerDetector.isDebuggerAttached() {
-            threats.append(.debugger)
-        }
-
-        #if !DEBUG
-        if configuration.emulatorCheckEnabled && EmulatorDetector.isEmulator() {
-            threats.append(.emulator)
-        }
-        #endif
-
-        if configuration.reverseEngineeringCheckEnabled && ReverseEngineeringDetector.isReverseEngineered() {
-            threats.append(.reverseEngineering)
-        }
-
-        if configuration.appIntegrityCheckEnabled && AppIntegrityDetector.isIntegrityCompromised(expectedTeamID: configuration.expectedTeamID) {
-            threats.append(.appIntegrity)
-        }
-
-        if configuration.screenRecordingCheckEnabled,
-           let provider = screenRecordingProvider,
-           provider.isScreenBeingRecorded() {
-            threats.append(.screenRecording)
-        }
-
-        if configuration.hookDetectionEnabled && HookDetector.isFunctionHooked() {
-            threats.append(.hooked)
-        }
-
-        if configuration.pinningBypassDetectionEnabled && CertificatePinningDetector.isPinningBypassed() {
-            threats.append(.pinningBypassed)
-        }
-
-        if configuration.vpnProxyDetectionEnabled && VPNProxyDetector.isVPNOrProxyActive() {
-            threats.append(.vpnProxy)
-        }
-
-        let result = SecurityResult(threats: threats)
-        updateStatus(from: result)
-        hasPerformedInitialCheck = true
-
+        let result = gatherThreats()
+        let pending = stateQueue.sync { applyResult(result) }
+        firePending(pending)
         return result
     }
 
@@ -123,12 +91,15 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Monitoring
 
     public func startMonitoring() {
-        guard !isMonitoring else { return }
-
-        isMonitoring = true
+        let alreadyRunning = stateQueue.sync { () -> Bool in
+            if isMonitoring { return true }
+            isMonitoring = true
+            return false
+        }
+        guard !alreadyRunning else { return }
 
 #if !DEBUG
-        if configuration.debuggerCheckEnabled {
+        if stateQueue.sync(execute: { configuration.debuggerCheckEnabled }) {
             DebuggerDetector.startContinuousDenyAttach()
         }
 #endif
@@ -152,7 +123,7 @@ public final class SecurityMonitor: SecurityMonitorType {
     public func stopMonitoring() {
         monitoringTimer?.cancel()
         monitoringTimer = nil
-        isMonitoring = false
+        stateQueue.sync { isMonitoring = false }
 #if !DEBUG
         DebuggerDetector.stopContinuousDenyAttach()
 #endif
@@ -161,26 +132,87 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Private
 
     private func runChecks() {
-        DispatchQueue.main.async { [weak self] in
-            _ = self?.performCheck()
-        }
+        let result = gatherThreats()
+        let pending = stateQueue.sync { applyResult(result) }
+        firePending(pending)
     }
 
-    private func updateStatus(from result: SecurityResult) {
-        let newStatus = mapToStatus(result)
+    private func gatherThreats() -> SecurityResult {
+        let (cfg, provider) = stateQueue.sync { (configuration, _screenRecordingProvider) }
+        var threats: [SecurityThreat] = []
 
+        if cfg.jailbreakCheckEnabled && JailbreakDetector.isJailbroken() {
+            threats.append(.jailbreak)
+        }
+        if cfg.debuggerCheckEnabled && DebuggerDetector.isDebuggerAttached() {
+            threats.append(.debugger)
+        }
+        #if !DEBUG
+        if cfg.emulatorCheckEnabled && EmulatorDetector.isEmulator() {
+            threats.append(.emulator)
+        }
+        #endif
+        if cfg.reverseEngineeringCheckEnabled && ReverseEngineeringDetector.isReverseEngineered() {
+            threats.append(.reverseEngineering)
+        }
+        if cfg.appIntegrityCheckEnabled && AppIntegrityDetector.isIntegrityCompromised(expectedTeamID: cfg.expectedTeamID) {
+            threats.append(.appIntegrity)
+        }
+        if cfg.screenRecordingCheckEnabled,
+           let provider,
+           provider.isScreenBeingRecorded() {
+            threats.append(.screenRecording)
+        }
+        if cfg.hookDetectionEnabled && HookDetector.isFunctionHooked() {
+            threats.append(.hooked)
+        }
+        if cfg.pinningBypassDetectionEnabled && CertificatePinningDetector.isPinningBypassed() {
+            threats.append(.pinningBypassed)
+        }
+        if cfg.vpnProxyDetectionEnabled && VPNProxyDetector.isVPNOrProxyActive() {
+            threats.append(.vpnProxy)
+        }
+
+        return SecurityResult(threats: threats)
+    }
+
+    private func applyResult(_ result: SecurityResult) -> (statusChange: SecurityStatus?, newThreats: [SecurityThreat]) {
+        let newStatus = mapToStatus(result)
+        var statusChange: SecurityStatus?
         if newStatus != _status {
             _status = newStatus
-            onStatusChange?(newStatus)
+            statusChange = newStatus
         }
 
-        // Only fire onThreatDetected for threats that weren't present last cycle
         let currentThreats = Set(result.threats)
-        let newThreats = currentThreats.subtracting(_previousThreats)
-        for threat in newThreats {
-            onThreatDetected?(threat)
-        }
+        let candidateThreats = currentThreats.subtracting(_previousThreats)
         _previousThreats = currentThreats
+        hasPerformedInitialCheck = true
+        
+        let now = Date()
+        let newThreats = Array(candidateThreats.filter { threat in
+            guard let last = _lastThreatCallbackTime[threat] else { return true }
+            return now.timeIntervalSince(last) >= _threatCallbackThrottleInterval
+        })
+        for threat in newThreats {
+            _lastThreatCallbackTime[threat] = now
+        }
+
+        return (statusChange, newThreats)
+    }
+
+    private func firePending(_ pending: (statusChange: SecurityStatus?, newThreats: [SecurityThreat])) {
+        guard pending.statusChange != nil || !pending.newThreats.isEmpty else { return }
+        // Snapshot handlers under stateQueue to avoid a data race with concurrent setter calls.
+        let (statusHandler, threatHandler) = stateQueue.sync { (_onStatusChange, _onThreatDetected) }
+        DispatchQueue.main.async {
+            if let status = pending.statusChange {
+                statusHandler?(status)
+            }
+            for threat in pending.newThreats {
+                threatHandler?(threat)
+            }
+        }
     }
 
     private func mapToStatus(_ result: SecurityResult) -> SecurityStatus {

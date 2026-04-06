@@ -15,14 +15,12 @@ public final class SecurityLoggerManager {
     
     private init() {}
     
-    /// Configure the global logging behavior
     public func configure(_ configuration: SecurityLoggerConfiguration) {
         configurationQueue.sync {
             self.configuration = configuration
         }
     }
     
-    /// Get current configuration (thread-safe)
     internal func currentConfiguration() -> SecurityLoggerConfiguration {
         return configurationQueue.sync {
             return configuration

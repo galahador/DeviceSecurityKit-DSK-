@@ -9,7 +9,6 @@ public final class HookDetector {
 
     // MARK: - Public
 
-    /// Returns true if any security-critical C function has been hooked.
     public static func isFunctionHooked() -> Bool {
         return checkSystemFunctionOrigins()
             || checkFunctionPrologues()

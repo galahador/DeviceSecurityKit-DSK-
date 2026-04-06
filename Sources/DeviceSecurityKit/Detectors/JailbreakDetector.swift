@@ -11,8 +11,7 @@ public final class JailbreakDetector {
 
     private static var _isDetectionEnabled: Bool = true
 
-    /// Enables or disables all jailbreak detection. When false, isJailbroken() always returns false.
-    public static var isDetectionEnabled: Bool {
+    internal static var isDetectionEnabled: Bool {
         get { detectionQueue.sync { _isDetectionEnabled } }
         set { detectionQueue.sync(flags: .barrier) { _isDetectionEnabled = newValue } }
     }
@@ -67,7 +66,6 @@ public final class JailbreakDetector {
 
     // MARK: - Public
 
-    /// Main jailbreak detection method
     public static func isJailbroken() -> Bool {
         guard isDetectionEnabled else { return false }
 
@@ -138,7 +136,6 @@ public final class JailbreakDetector {
         return false
     }
 
-    /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
     private static func checkSuspiciousEnvironmentVars() -> Bool {
 #if DEBUG
         // Xcode injects DYLD_INSERT_LIBRARIES (e.g. Main Thread Checker) in debug builds.
@@ -157,9 +154,9 @@ public final class JailbreakDetector {
 #if os(iOS) && !targetEnvironment(simulator)
         typealias ForkType = @convention(c) () -> pid_t
 
-        guard let handle = dlopen(nil, RTLD_NOW),
-              let sym = dlsym(handle, "fork") else { return false }
-        dlclose(handle)
+        guard let handle = dlopen(nil, RTLD_NOW) else { return false }
+        defer { dlclose(handle) }
+        guard let sym = dlsym(handle, "fork") else { return false }
 
         let forkFn = unsafeBitCast(sym, to: ForkType.self)
         let pid = forkFn()
