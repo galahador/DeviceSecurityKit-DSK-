@@ -11,8 +11,7 @@ public final class JailbreakDetector {
 
     private static var _isDetectionEnabled: Bool = true
 
-    /// Enables or disables all jailbreak detection. When false, isJailbroken() always returns false.
-    public static var isDetectionEnabled: Bool {
+    internal static var isDetectionEnabled: Bool {
         get { detectionQueue.sync { _isDetectionEnabled } }
         set { detectionQueue.sync(flags: .barrier) { _isDetectionEnabled = newValue } }
     }

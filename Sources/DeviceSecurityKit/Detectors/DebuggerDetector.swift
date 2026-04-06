@@ -13,8 +13,7 @@ public final class DebuggerDetector {
     private static let denyAttachQueue = DispatchQueue(label: "DebuggerDetector.denyAttach", qos: .background)
     private static var denyAttachTimer: DispatchSourceTimer?
     
-    /// debugger detection ( ON / OFF )
-    public static var isDetectionEnabled: Bool {
+    internal static var isDetectionEnabled: Bool {
         get {
             return detectionQueue.sync { _isDetectionEnabled }
         }
