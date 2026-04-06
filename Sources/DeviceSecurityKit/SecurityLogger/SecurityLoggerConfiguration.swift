@@ -27,10 +27,8 @@ public struct SecurityLoggerConfiguration {
         self.customOutputHandler = customOutputHandler
     }
     
-    /// Default configuration for library usage
     public static let `default` = SecurityLoggerConfiguration()
     
-    /// Silent configuration (no logging)
     public static let silent = SecurityLoggerConfiguration(
         enableLogging: false,
         logLevel: .error,
@@ -38,7 +36,6 @@ public struct SecurityLoggerConfiguration {
         enableSystemLogging: false
     )
     
-    /// Production configuration (warnings and errors only)
     public static let production = SecurityLoggerConfiguration(
         enableLogging: true,
         logLevel: .warning,

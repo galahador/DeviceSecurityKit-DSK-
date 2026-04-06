@@ -31,7 +31,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         set { stateQueue.sync(flags: .barrier) { _threatCallbackThrottleInterval = newValue } }
     }
 
-    public var screenRecordingProvider: ScreenRecordingProvider?
+    public var screenRecordingProvider: ScreenRecordingProvider? = DefaultScreenRecordingProvider()
 
     // MARK: - Initialization
 
@@ -127,15 +127,12 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     // MARK: - Private
 
-    /// Runs on timerQueue (background). Checks happen off the main thread, then
-    /// state is updated under stateQueue and callbacks are dispatched to main.
     private func runChecks() {
         let result = gatherThreats()
         let pending = stateQueue.sync { applyResult(result) }
         firePending(pending)
     }
 
-    /// Collects all active threats. May be called from any thread (no shared state touched).
     private func gatherThreats() -> SecurityResult {
         let cfg = stateQueue.sync { configuration }
         var threats: [SecurityThreat] = []
@@ -175,8 +172,6 @@ public final class SecurityMonitor: SecurityMonitorType {
         return SecurityResult(threats: threats)
     }
 
-    /// Applies a result to mutable state. Must be called inside stateQueue.sync.
-    /// Returns the callbacks that should be fired after the lock is released.
     private func applyResult(_ result: SecurityResult) -> (statusChange: SecurityStatus?, newThreats: [SecurityThreat]) {
         let newStatus = mapToStatus(result)
         var statusChange: SecurityStatus?
@@ -202,7 +197,6 @@ public final class SecurityMonitor: SecurityMonitorType {
         return (statusChange, newThreats)
     }
 
-    /// Dispatches pending callbacks to the main queue.
     private func firePending(_ pending: (statusChange: SecurityStatus?, newThreats: [SecurityThreat])) {
         guard pending.statusChange != nil || !pending.newThreats.isEmpty else { return }
         DispatchQueue.main.async { [weak self] in

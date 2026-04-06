@@ -66,7 +66,6 @@ public final class JailbreakDetector {
 
     // MARK: - Public
 
-    /// Main jailbreak detection method
     public static func isJailbroken() -> Bool {
         guard isDetectionEnabled else { return false }
 
@@ -137,7 +136,6 @@ public final class JailbreakDetector {
         return false
     }
 
-    /// Checks environment variables associated with jailbreak substrate/hooking frameworks.
     private static func checkSuspiciousEnvironmentVars() -> Bool {
 #if DEBUG
         // Xcode injects DYLD_INSERT_LIBRARIES (e.g. Main Thread Checker) in debug builds.

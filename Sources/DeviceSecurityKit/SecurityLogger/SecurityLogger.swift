@@ -66,7 +66,6 @@ public final class SecurityLogger {
     
     // MARK: - Public Methods
     
-    /// Log a message with specified level and context information
     public func log(
         _ message: String,
         level: LogLevel = .info,
@@ -91,7 +90,6 @@ public final class SecurityLogger {
         }
     }
     
-    /// Log a debug message
     public func debug(
         _ message: String,
         file: String = #file,
@@ -101,7 +99,6 @@ public final class SecurityLogger {
         log(message, level: .debug, file: file, function: function, line: line)
     }
     
-    /// Log an informational message
     public func info(
         _ message: String,
         file: String = #file,
@@ -111,7 +108,6 @@ public final class SecurityLogger {
         log(message, level: .info, file: file, function: function, line: line)
     }
     
-    /// Log a warning message
     public func warning(
         _ message: String,
         file: String = #file,
@@ -121,7 +117,6 @@ public final class SecurityLogger {
         log(message, level: .warning, file: file, function: function, line: line)
     }
     
-    /// Log an error message
     public func error(
         _ message: String,
         file: String = #file,
@@ -203,27 +198,22 @@ public final class SecurityLogger {
 // MARK: - Convenience Factory
 
 public extension SecurityLogger {
-    /// Create a logger for security-related operations
     static func security(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Security")
     }
     
-    /// Create a logger for debug-related operations
     static func debug(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Debug")
     }
     
-    /// Create a logger for monitoring operations
     static func monitor(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Monitor")
     }
     
-    /// Create a logger for detection operations
     static func detection(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Detection")
     }
     
-    /// Create a logger for analysis operations
     static func analysis(subsystem: String) -> SecurityLogger {
         return SecurityLogger(subsystem: subsystem, category: "Analysis")
     }
@@ -232,7 +222,6 @@ public extension SecurityLogger {
 // MARK: - Library Internal Helper
 
 internal extension SecurityLogger {
-    /// Internal helper for library components to create consistent loggers
     static func libraryLogger(for component: String) -> SecurityLogger {
         return SecurityLogger(subsystem: "DeviceSecurityKit", category: component)
     }

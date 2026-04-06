@@ -24,7 +24,6 @@ public final class DebuggerDetector {
     
     // MARK: - Continuous PT_DENY_ATTACH Hardening
 
-    /// Starts re-asserting PT_DENY_ATTACH on a background thread every `interval` seconds.
     public static func startContinuousDenyAttach(interval: TimeInterval = 1.0) {
 #if !DEBUG
         guard denyAttachTimer == nil else { return }
@@ -41,7 +40,6 @@ public final class DebuggerDetector {
 #endif
     }
 
-    /// Stops the continuous PT_DENY_ATTACH background timer.
     public static func stopContinuousDenyAttach() {
 #if !DEBUG
         denyAttachTimer?.cancel()
@@ -50,7 +48,6 @@ public final class DebuggerDetector {
 #endif
     }
 
-    /// Detects debugger attachment using multiple methods
     public static func isDebuggerAttached() -> Bool {
         guard isDetectionEnabled else {
             logger.debug("Debugger detection is disabled")
@@ -83,7 +80,6 @@ public final class DebuggerDetector {
 #endif
     }
     
-    /// Returns detailed detection results for each method
     public static func getDetectionResults() -> [String: Bool] {
         guard isDetectionEnabled else {
             return [:]
@@ -99,7 +95,6 @@ public final class DebuggerDetector {
         ]
     }
     
-    /// Checks P_TRACED flag via sysctl
     private static func checkDebuggerWithSysctl() -> Bool {
         var info = kinfo_proc()
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
@@ -125,7 +120,6 @@ public final class DebuggerDetector {
         return isTraced
     }
     
-    /// Detects debugger using PT_DENY_ATTACH
     private static func checkDebuggerWithPtrace() -> Bool {
 #if !DEBUG
         let PT_DENY_ATTACH: Int32 = 31
@@ -183,7 +177,6 @@ public final class DebuggerDetector {
         return detected
     }
     
-    /// Scans environment variables for debugging tools
     private static func checkDebuggerEnvironment() -> Bool {
         for envVar in debuggerDetectorList.suspiciousEnvVars {
             if let value = getenv(envVar) {
@@ -196,7 +189,6 @@ public final class DebuggerDetector {
         return false
     }
     
-    /// Detects debugger through execution timing analysis
     private static func checkTimingAnalysis() -> Bool {
 #if !DEBUG
         let iterations = 1000
@@ -233,7 +225,6 @@ public final class DebuggerDetector {
 #endif
     }
     
-    /// Breakpoint instructions
     private static func checkBreakpointDetection() -> Bool {
 #if !DEBUG
         let functionPtr = unsafeBitCast(checkBreakpointDetection, to: UnsafeRawPointer.self)
@@ -266,7 +257,6 @@ public final class DebuggerDetector {
     }
 }
 
-/// Dynamic ptrace function loading
 private func ptrace(_ request: Int32, _ pid: pid_t, _ addr: UnsafeMutableRawPointer?, _ data: Int32) -> Int32 {
     typealias PtraceType = @convention(c) (Int32, pid_t, UnsafeMutableRawPointer?, Int32) -> Int32
     

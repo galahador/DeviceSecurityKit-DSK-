@@ -31,10 +31,8 @@ final class ScreenRecordingTests: XCTestCase {
         XCTAssertFalse(result.isScreenRecorded)
     }
 
-    func testNoThreat_whenProviderNotInjected() {
+    func testNoThreat_whenDefaultProvider_andNotRecording() {
         let monitor = SecurityMonitor(configuration: .disabled.withScreenRecordingCheck(true))
-        // No provider set — check must be skipped silently
-
         let result = monitor.performCheck()
         XCTAssertFalse(result.isScreenRecorded)
     }
