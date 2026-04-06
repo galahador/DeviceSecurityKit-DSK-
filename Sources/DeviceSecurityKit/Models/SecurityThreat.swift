@@ -10,6 +10,7 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
     case hooked
     case pinningBypassed
     case vpnProxy
+    case methodSwizzling
     case noThreat
 
     public var description: String {
@@ -32,6 +33,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return "Certificate pinning bypass detected"
         case .vpnProxy:
             return "VPN or proxy connection detected"
+        case .methodSwizzling:
+            return "Objective-C method swizzling detected"
         case .noThreat:
             return "App is Secure"
         }
@@ -57,6 +60,8 @@ public enum SecurityThreat: String, CaseIterable, Equatable {
             return .medium
         case .vpnProxy:
             return .medium
+        case .methodSwizzling:
+            return .critical
         case .noThreat:
             return .normal
         }

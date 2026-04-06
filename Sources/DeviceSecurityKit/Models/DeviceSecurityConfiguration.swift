@@ -11,6 +11,7 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var hookDetectionEnabled: Bool
     public var pinningBypassDetectionEnabled: Bool
     public var vpnProxyDetectionEnabled: Bool
+    public var swizzlingDetectionEnabled: Bool
 
     public init(
         jailbreakCheckEnabled: Bool = true,
@@ -22,7 +23,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         screenRecordingCheckEnabled: Bool = true,
         hookDetectionEnabled: Bool = true,
         pinningBypassDetectionEnabled: Bool = true,
-        vpnProxyDetectionEnabled: Bool = true
+        vpnProxyDetectionEnabled: Bool = true,
+        swizzlingDetectionEnabled: Bool = true
     ) {
         self.jailbreakCheckEnabled = jailbreakCheckEnabled
         self.debuggerCheckEnabled = debuggerCheckEnabled
@@ -34,6 +36,7 @@ public struct DeviceSecurityConfiguration: Equatable {
         self.hookDetectionEnabled = hookDetectionEnabled
         self.pinningBypassDetectionEnabled = pinningBypassDetectionEnabled
         self.vpnProxyDetectionEnabled = vpnProxyDetectionEnabled
+        self.swizzlingDetectionEnabled = swizzlingDetectionEnabled
     }
     
     // MARK: - Presets
@@ -116,6 +119,12 @@ public struct DeviceSecurityConfiguration: Equatable {
         var config = self
         config.appIntegrityCheckEnabled = enabled
         config.expectedTeamID = expectedTeamID
+        return config
+    }
+
+    public func withSwizzlingDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
+        var config = self
+        config.swizzlingDetectionEnabled = enabled
         return config
     }
 }

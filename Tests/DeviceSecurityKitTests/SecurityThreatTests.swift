@@ -35,7 +35,7 @@ final class SecurityThreatTests: XCTestCase {
     }
 
     func testAllCasesCount() {
-        XCTAssertEqual(SecurityThreat.allCases.count, 10)
+        XCTAssertEqual(SecurityThreat.allCases.count, 11)
         let set: Set<SecurityThreat> = [.jailbreak, .jailbreak, .debugger, .screenRecording]
         XCTAssertEqual(set.count, 3)
     }

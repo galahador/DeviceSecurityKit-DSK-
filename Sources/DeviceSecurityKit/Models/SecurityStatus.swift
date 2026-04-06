@@ -9,6 +9,7 @@ public enum SecurityStatus: Equatable {
     case appIntegrityCompromised
     case screenRecording
     case hooked
+    case methodSwizzled
     case pinningBypassed
     case vpnProxy
     case compromised
@@ -35,6 +36,8 @@ public enum SecurityStatus: Equatable {
             return "Screen is being recorded"
         case .hooked:
             return "Security functions have been hooked"
+        case .methodSwizzled:
+            return "Objective-C method swizzling detected"
         case .pinningBypassed:
             return "Certificate pinning has been bypassed"
         case .vpnProxy:
