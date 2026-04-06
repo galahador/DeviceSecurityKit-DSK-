@@ -54,6 +54,7 @@ public final class SwizzlingDetector {
             let selName   = o.reveal(selBytes)
             guard let cls = NSClassFromString(className) else { continue }
             let sel = NSSelectorFromString(selName)
+            guard class_getInstanceMethod(cls, sel) != nil else { continue }
             guard let imp = class_getMethodImplementation(cls, sel) else { continue }
 
             if impIsOutsideSystem(imp, systemPrefixes: systemPrefixes, label: "\(className).\(selName)") {
@@ -72,7 +73,8 @@ public final class SwizzlingDetector {
         if let cls = NSClassFromString(connClass),
            let metaCls = object_getClass(cls) {
             let sel = NSSelectorFromString(connSel)
-            if let imp = class_getMethodImplementation(metaCls, sel) {
+            if class_getInstanceMethod(metaCls, sel) != nil,
+               let imp = class_getMethodImplementation(metaCls, sel) {
                 if impIsOutsideSystem(imp, systemPrefixes: systemPrefixes, label: "+\(connClass).\(connSel)") {
                     return true
                 }
