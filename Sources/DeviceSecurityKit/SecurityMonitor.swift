@@ -15,9 +15,10 @@ public final class SecurityMonitor: SecurityMonitorType {
     private var _lastThreatCallbackTime: [SecurityThreat: Date] = [:]
     private var _threatCallbackThrottleInterval: TimeInterval = 300
 
-    // MARK: - Handlers
-    private var onStatusChange: ((SecurityStatus) -> Void)?
-    private var onThreatDetected: ((SecurityThreat) -> Void)?
+    // MARK: - Handlers (protected by stateQueue)
+    private var _onStatusChange: ((SecurityStatus) -> Void)?
+    private var _onThreatDetected: ((SecurityThreat) -> Void)?
+    private var _screenRecordingProvider: ScreenRecordingProvider? = DefaultScreenRecordingProvider()
 
     // MARK: - Public Properties
     public var status: SecurityStatus {
@@ -31,7 +32,10 @@ public final class SecurityMonitor: SecurityMonitorType {
         set { stateQueue.sync(flags: .barrier) { _threatCallbackThrottleInterval = newValue } }
     }
 
-    public var screenRecordingProvider: ScreenRecordingProvider? = DefaultScreenRecordingProvider()
+    public var screenRecordingProvider: ScreenRecordingProvider? {
+        get { stateQueue.sync { _screenRecordingProvider } }
+        set { stateQueue.sync(flags: .barrier) { _screenRecordingProvider = newValue } }
+    }
 
     // MARK: - Initialization
 
@@ -61,13 +65,13 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     @discardableResult
     public func onStatusChange(_ handler: @escaping (SecurityStatus) -> Void) -> Self {
-        onStatusChange = handler
+        stateQueue.sync(flags: .barrier) { _onStatusChange = handler }
         return self
     }
 
     @discardableResult
     public func onThreatDetected(_ handler: @escaping (SecurityThreat) -> Void) -> Self {
-        onThreatDetected = handler
+        stateQueue.sync(flags: .barrier) { _onThreatDetected = handler }
         return self
     }
 
@@ -134,7 +138,7 @@ public final class SecurityMonitor: SecurityMonitorType {
     }
 
     private func gatherThreats() -> SecurityResult {
-        let cfg = stateQueue.sync { configuration }
+        let (cfg, provider) = stateQueue.sync { (configuration, _screenRecordingProvider) }
         var threats: [SecurityThreat] = []
 
         if cfg.jailbreakCheckEnabled && JailbreakDetector.isJailbroken() {
@@ -155,7 +159,7 @@ public final class SecurityMonitor: SecurityMonitorType {
             threats.append(.appIntegrity)
         }
         if cfg.screenRecordingCheckEnabled,
-           let provider = screenRecordingProvider,
+           let provider,
            provider.isScreenBeingRecorded() {
             threats.append(.screenRecording)
         }
@@ -199,13 +203,14 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     private func firePending(_ pending: (statusChange: SecurityStatus?, newThreats: [SecurityThreat])) {
         guard pending.statusChange != nil || !pending.newThreats.isEmpty else { return }
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+        // Snapshot handlers under stateQueue to avoid a data race with concurrent setter calls.
+        let (statusHandler, threatHandler) = stateQueue.sync { (_onStatusChange, _onThreatDetected) }
+        DispatchQueue.main.async {
             if let status = pending.statusChange {
-                self.onStatusChange?(status)
+                statusHandler?(status)
             }
             for threat in pending.newThreats {
-                self.onThreatDetected?(threat)
+                threatHandler?(threat)
             }
         }
     }
