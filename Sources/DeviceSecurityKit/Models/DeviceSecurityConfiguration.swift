@@ -12,6 +12,7 @@ public struct DeviceSecurityConfiguration: Equatable {
     public var pinningBypassDetectionEnabled: Bool
     public var vpnProxyDetectionEnabled: Bool
     public var swizzlingDetectionEnabled: Bool
+    public var fridaDetectionEnabled: Bool
 
     public init(
         jailbreakCheckEnabled: Bool = true,
@@ -24,7 +25,8 @@ public struct DeviceSecurityConfiguration: Equatable {
         hookDetectionEnabled: Bool = true,
         pinningBypassDetectionEnabled: Bool = true,
         vpnProxyDetectionEnabled: Bool = true,
-        swizzlingDetectionEnabled: Bool = true
+        swizzlingDetectionEnabled: Bool = true,
+        fridaDetectionEnabled: Bool = true
     ) {
         self.jailbreakCheckEnabled = jailbreakCheckEnabled
         self.debuggerCheckEnabled = debuggerCheckEnabled
@@ -37,6 +39,7 @@ public struct DeviceSecurityConfiguration: Equatable {
         self.pinningBypassDetectionEnabled = pinningBypassDetectionEnabled
         self.vpnProxyDetectionEnabled = vpnProxyDetectionEnabled
         self.swizzlingDetectionEnabled = swizzlingDetectionEnabled
+        self.fridaDetectionEnabled = fridaDetectionEnabled
     }
     
     // MARK: - Presets
@@ -125,6 +128,12 @@ public struct DeviceSecurityConfiguration: Equatable {
     public func withSwizzlingDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
         var config = self
         config.swizzlingDetectionEnabled = enabled
+        return config
+    }
+
+    public func withFridaDetection(_ enabled: Bool) -> DeviceSecurityConfiguration {
+        var config = self
+        config.fridaDetectionEnabled = enabled
         return config
     }
 }

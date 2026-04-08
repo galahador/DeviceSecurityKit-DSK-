@@ -12,6 +12,7 @@ public enum SecurityStatus: Equatable {
     case methodSwizzled
     case pinningBypassed
     case vpnProxy
+    case fridaDetected
     case compromised
 
     public var isSecure: Bool {
@@ -42,6 +43,8 @@ public enum SecurityStatus: Equatable {
             return "Certificate pinning has been bypassed"
         case .vpnProxy:
             return "VPN or proxy connection is active"
+        case .fridaDetected:
+            return "Frida instrumentation runtime detected"
         case .compromised:
             return "Device is compromised"
         }

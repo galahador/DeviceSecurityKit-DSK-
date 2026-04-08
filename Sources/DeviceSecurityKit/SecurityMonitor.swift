@@ -175,6 +175,9 @@ public final class SecurityMonitor: SecurityMonitorType {
         if cfg.swizzlingDetectionEnabled && SwizzlingDetector.isSwizzled() {
             threats.append(.methodSwizzling)
         }
+        if cfg.fridaDetectionEnabled && FridaDetector.isFridaDetected() {
+            threats.append(.fridaDetected)
+        }
 
         return SecurityResult(threats: threats)
     }
@@ -226,6 +229,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isAppIntegrityCompromised { return .appIntegrityCompromised }
         if result.isFunctionHooked        { return .hooked }
         if result.isMethodSwizzled        { return .methodSwizzled }
+        if result.isFridaDetected         { return .fridaDetected }
         if result.isPinningBypassed       { return .pinningBypassed }
         // High
         if result.isDebuggerAttached      { return .debuggerAttached }

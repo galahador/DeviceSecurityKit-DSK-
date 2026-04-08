@@ -51,5 +51,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.methodSwizzling)
     }
 
+    public var isFridaDetected: Bool {
+        return threats.contains(.fridaDetected)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }
