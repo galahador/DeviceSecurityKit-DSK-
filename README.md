@@ -17,17 +17,20 @@ Detect jailbreak, debugger, emulator, screen recording, and reverse engineering 
 
 ## Features
 
-| Detection | What it checks |
-|-----------|---------------|
-| 🔒 **Jailbreak** | Files, sandbox escape, URL schemes, symlinks |
-| 🐛 **Debugger** | `sysctl`, `ptrace` |
-| 📱 **Emulator** | Simulator environment variables |
-| 🔧 **Reverse Engineering** | Frida, Substrate, libhooker, env vars |
-| 🎣 **Hook Detection** | Runtime method hooking |
-| 📹 **Screen Recording** | Active recording/mirroring detection |
-| 🔐 **Pinning Bypass** | Certificate pinning bypass detection |
-| 🌐 **VPN / Proxy** | Network proxy and VPN detection |
-| 🔄 **Monitoring** | Real-time continuous background checks |
+  | Detection | What it checks |
+  |-----------|---------------|                                                                                                                                                         
+  | 🔒 **Jailbreak** | Files, sandbox escape, fork capability, URL schemes, symlinks, env vars, preboot paths |
+  | 🐛 **Debugger** | `sysctl`, `ptrace`, parent process, timing analysis, breakpoint instructions |                                                                                    
+  | 📱 **Emulator** | Confidence-scored multi-signal simulator detection |                                                                                                              
+  | 🔧 **Reverse Engineering** | Frida, Substrate, libhooker, env vars, code integrity |                                                                                                
+  | 🔏 **App Integrity** | Code signature, provisioning profile, team ID validation |                                                                                                   
+  | 🎣 **Hook Detection** | Runtime function hooking via dlsym/dladdr + ARM64 prologue scanning |                                                                                       
+  | 🔀 **Method Swizzling** | Objective-C IMP redirection on UIApplication and delegate methods |                                                                                       
+  | 🕵️  **Frida Detection** | Loaded libraries, Frida symbols, port 27042 connectivity |                                                                                                 
+  | 📹 **Screen Recording** | Active recording/mirroring detection |                                                                                                                    
+  | 🔐 **Pinning Bypass** | Certificate pinning bypass detection |                                                                                                                      
+  | 🌐 **VPN / Proxy** | Network proxy and VPN detection |                                                                                                                              
+  | 🔄 **Monitoring** | Real-time continuous background checks with PT_DENY_ATTACH hardening |  
 
 ---
 ## Installation
@@ -156,6 +159,32 @@ DSK.shared
     .start()
 ```
 
+### Respond to any threat Automatic countermeasure
+
+```swift 
+  DSK.shared                                                                                                                                                            
+      .countermeasure(throttled: false) { threat in
+          Analytics.log("dsk_threat", ["type": threat.rawValue])
+      }                                                                                                                                                                                 
+      .start()
+
+  Pre-built Countermeasure objects
+
+  let cm = Countermeasure(trigger: .threat(.fridaDetected), throttled: true) { _ in
+      exit(0)
+  }
+
+  DSK.shared                                                                                                                                                                            
+      .addCountermeasure(cm)
+      .start()                                                                                                                                                                          
+                  
+  // Remove later if needed
+  DSK.shared.removeCountermeasure(cm)
+  DSK.shared.removeAllCountermeasures()                                                                                                        
+```
+  ▎ Throttling: By default, throttled countermeasures fire at most once every 300 seconds per threat type. Set throttled: false to fire on every detection cycle.                       
+
+
 ---
 
 ## API Reference
@@ -190,6 +219,9 @@ result.isDebuggerAttached   // Bool
 | `.reverseEngineering` | 🔴 Critical |
 | `.hooked` | 🔴 Critical |
 | `.pinningBypassed` | 🔴 Critical |
+| ` .methodSwizzling`| 🔴 Critical |
+| `.fridaDetected` | 🔴 Critical |
+| `.appIntegrity` | 🔴 Critical |
 | `.debugger` | 🟠 High |
 | `.screenRecording` | 🟠 High |
 | `.emulator` | 🟡 Medium |
