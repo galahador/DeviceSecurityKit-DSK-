@@ -36,7 +36,6 @@ public final class EmulatorDetector {
 
     public static func detectEmulator() -> DetectionResult {
 
-        // Compile-time check is always authoritative: if built for simulator, it IS a simulator.
         if checkSimulatorEnvironment() {
             secureLog(publicMessage: "Emulator detected",
                       debugMessage: "Emulator detected via compilation target", logger: logger)
@@ -139,7 +138,6 @@ public final class EmulatorDetector {
             }
         }
 
-        // Secondary paths — require 2+ matches to reduce false positives
         let additionalPaths = emulatorDetectorListOptions.simulatorPaths.filter {
             !criticalPaths.contains($0)
         }

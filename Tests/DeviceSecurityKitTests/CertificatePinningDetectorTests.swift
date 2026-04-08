@@ -55,8 +55,6 @@ final class CertificatePinningDetectorTests: XCTestCase {
     // MARK: - Detector (smoke test — can't fully test in simulator)
 
     func testIsPinningBypassed_returnsBoolean() {
-        // Just verify it doesn't crash and returns a value.
-        // Actual bypass checks are hardware/runtime-specific.
         let _ = CertificatePinningDetector.isPinningBypassed()
     }
 }

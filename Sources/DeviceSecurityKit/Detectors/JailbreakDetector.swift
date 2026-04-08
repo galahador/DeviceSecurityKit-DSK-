@@ -161,7 +161,6 @@ public final class JailbreakDetector {
         let forkFn = unsafeBitCast(sym, to: ForkType.self)
         let pid = forkFn()
         if pid == 0 {
-            // Child process — fork succeeded, which must not happen in a sandbox
             exit(0)
         }
         return pid > 0

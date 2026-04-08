@@ -53,10 +53,7 @@ final class VPNProxyDetectorTests: XCTestCase {
     }
 
     // MARK: - Detector (smoke test)
-
     func testIsVPNOrProxyActive_returnsBoolean() {
-        // Just verify it doesn't crash and returns a value.
-        // Actual VPN/proxy state is environment-specific.
         let _ = VPNProxyDetector.isVPNOrProxyActive()
     }
 }

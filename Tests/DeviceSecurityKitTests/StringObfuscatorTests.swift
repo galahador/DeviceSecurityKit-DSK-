@@ -27,7 +27,6 @@ final class StringObfuscatorTests: XCTestCase {
     }
 
     func testEncodedBytesAreNotPlaintext() {
-        // Encoded bytes should differ from original UTF-8 bytes (key is non-zero).
         let original = "FridaGadget"
         let encoded = obfuscator.conceal(original)
         let originalBytes = Array(original.utf8)
@@ -35,7 +34,6 @@ final class StringObfuscatorTests: XCTestCase {
     }
 
     func testRevealKnownBytes_fridaGadget() {
-        // Pre-computed bytes used in ReverseEngineeringListsOptions.
         let bytes: [UInt8] = [0xEC, 0xD8, 0xC3, 0xCE, 0xCB, 0xED, 0xCB, 0xCE, 0xCD, 0xCF, 0xDE]
         XCTAssertEqual(obfuscator.reveal(bytes), "FridaGadget")
     }
