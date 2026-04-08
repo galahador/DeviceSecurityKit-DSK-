@@ -5,7 +5,15 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Private Properties
     private var monitoringTimer: DispatchSourceTimer?
     private let timerQueue = DispatchQueue(label: "com.devicesecuritykit.monitor", qos: .userInitiated)
-    private let stateQueue = DispatchQueue(label: "com.devicesecuritykit.monitor.state", qos: .userInitiated)
+
+    // Bug 6 fix: declared as concurrent so that barrier writes and plain reads
+    // actually have distinct semantics. All writes must use sync(flags: .barrier);
+    // reads use plain sync for concurrent access.
+    private let stateQueue = DispatchQueue(
+        label: "com.devicesecuritykit.monitor.state",
+        qos: .userInitiated,
+        attributes: .concurrent
+    )
 
     private var configuration: DeviceSecurityConfiguration
     private var hasPerformedInitialCheck = false
@@ -19,6 +27,7 @@ public final class SecurityMonitor: SecurityMonitorType {
     private var _onStatusChange: ((SecurityStatus) -> Void)?
     private var _onThreatDetected: ((SecurityThreat) -> Void)?
     private var _screenRecordingProvider: ScreenRecordingProvider? = DefaultScreenRecordingProvider()
+    private var _countermeasures: [Countermeasure] = []
 
     // MARK: - Public Properties
     public var status: SecurityStatus {
@@ -50,7 +59,8 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Configuration
 
     public func configure(_ configuration: DeviceSecurityConfiguration) {
-        stateQueue.sync { self.configuration = configuration }
+        // Bug 6 fix: write needs .barrier on the now-concurrent stateQueue.
+        stateQueue.sync(flags: .barrier) { self.configuration = configuration }
 
         if stateQueue.sync(execute: { isMonitoring }) {
             runChecks()
@@ -75,11 +85,35 @@ public final class SecurityMonitor: SecurityMonitorType {
         return self
     }
 
+    // MARK: - Countermeasures
+
+    @discardableResult
+    public func addCountermeasure(_ countermeasure: Countermeasure) -> Self {
+        // Bug 4 fix: .noThreat is never emitted — silently drop in release builds
+        // (debug builds are caught by the assert inside Countermeasure.init).
+        if case .threat(let t) = countermeasure.trigger, t == .noThreat {
+            return self
+        }
+        stateQueue.sync(flags: .barrier) { _countermeasures.append(countermeasure) }
+        return self
+    }
+
+    @discardableResult
+    public func removeCountermeasure(_ countermeasure: Countermeasure) -> Self {
+        stateQueue.sync(flags: .barrier) { _countermeasures.removeAll { $0 == countermeasure } }
+        return self
+    }
+
+    public func removeAllCountermeasures() {
+        stateQueue.sync(flags: .barrier) { _countermeasures.removeAll() }
+    }
+
     // MARK: - Check Methods
 
     public func performCheck() -> SecurityResult {
         let result = gatherThreats()
-        let pending = stateQueue.sync { applyResult(result) }
+        // Bug 6 fix: applyResult writes multiple state fields — needs .barrier.
+        let pending = stateQueue.sync(flags: .barrier) { applyResult(result) }
         firePending(pending)
         return result
     }
@@ -91,7 +125,8 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Monitoring
 
     public func startMonitoring() {
-        let alreadyRunning = stateQueue.sync { () -> Bool in
+        // Bug 6 fix: read-then-write of isMonitoring must be atomic — needs .barrier.
+        let alreadyRunning = stateQueue.sync(flags: .barrier) { () -> Bool in
             if isMonitoring { return true }
             isMonitoring = true
             return false
@@ -123,7 +158,8 @@ public final class SecurityMonitor: SecurityMonitorType {
     public func stopMonitoring() {
         monitoringTimer?.cancel()
         monitoringTimer = nil
-        stateQueue.sync { isMonitoring = false }
+        // Bug 6 fix: write needs .barrier.
+        stateQueue.sync(flags: .barrier) { isMonitoring = false }
 #if !DEBUG
         DebuggerDetector.stopContinuousDenyAttach()
 #endif
@@ -133,7 +169,8 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     private func runChecks() {
         let result = gatherThreats()
-        let pending = stateQueue.sync { applyResult(result) }
+        // Bug 6 fix: applyResult writes multiple state fields — needs .barrier.
+        let pending = stateQueue.sync(flags: .barrier) { applyResult(result) }
         firePending(pending)
     }
 
@@ -182,7 +219,13 @@ public final class SecurityMonitor: SecurityMonitorType {
         return SecurityResult(threats: threats)
     }
 
-    private func applyResult(_ result: SecurityResult) -> (statusChange: SecurityStatus?, newThreats: [SecurityThreat]) {
+    // Bug 5 fix: returns currentThreats alongside newThreats so that unthrottled
+    // countermeasures can fire against the full active threat set every cycle.
+    private func applyResult(_ result: SecurityResult) -> (
+        statusChange: SecurityStatus?,
+        newThreats: [SecurityThreat],
+        currentThreats: [SecurityThreat]
+    ) {
         let newStatus = mapToStatus(result)
         var statusChange: SecurityStatus?
         if newStatus != _status {
@@ -194,7 +237,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         let candidateThreats = currentThreats.subtracting(_previousThreats)
         _previousThreats = currentThreats
         hasPerformedInitialCheck = true
-        
+
         let now = Date()
         let newThreats = Array(candidateThreats.filter { threat in
             guard let last = _lastThreatCallbackTime[threat] else { return true }
@@ -204,13 +247,36 @@ public final class SecurityMonitor: SecurityMonitorType {
             _lastThreatCallbackTime[threat] = now
         }
 
-        return (statusChange, newThreats)
+        return (statusChange, newThreats, Array(currentThreats))
     }
 
-    private func firePending(_ pending: (statusChange: SecurityStatus?, newThreats: [SecurityThreat])) {
+    private func firePending(_ pending: (
+        statusChange: SecurityStatus?,
+        newThreats: [SecurityThreat],
+        currentThreats: [SecurityThreat]
+    )) {
+        guard pending.statusChange != nil || !pending.newThreats.isEmpty || !pending.currentThreats.isEmpty else { return }
+
+        let (statusHandler, threatHandler, countermeasures) = stateQueue.sync {
+            (_onStatusChange, _onThreatDetected, _countermeasures)
+        }
+
+        // Bug 1 fix: countermeasures fire synchronously on the calling queue before
+        // this function returns. For periodic monitoring that is timerQueue; for
+        // performCheck() it is the caller's thread. This ensures countermeasures
+        // have completed before performCheck() returns to the call site.
+        // Throttled countermeasures act on newThreats (gated by the throttle window);
+        // unthrottled countermeasures act on currentThreats (every detected threat,
+        // every cycle) — Bug 5 fix.
+        for cm in countermeasures {
+            let targets = cm.throttled ? pending.newThreats : pending.currentThreats
+            for threat in targets where cm.matches(threat) {
+                cm.action(threat)
+            }
+        }
+
+        // Notification callbacks remain async on the main queue (existing behaviour).
         guard pending.statusChange != nil || !pending.newThreats.isEmpty else { return }
-        // Snapshot handlers under stateQueue to avoid a data race with concurrent setter calls.
-        let (statusHandler, threatHandler) = stateQueue.sync { (_onStatusChange, _onThreatDetected) }
         DispatchQueue.main.async {
             if let status = pending.statusChange {
                 statusHandler?(status)
@@ -224,19 +290,19 @@ public final class SecurityMonitor: SecurityMonitorType {
     private func mapToStatus(_ result: SecurityResult) -> SecurityStatus {
         if result.isSecure { return .secure }
 
-        if result.isJailbroken            { return .jailbroken }
-        if result.isReverseEngineered     { return .reverseEngineered }
+        if result.isJailbroken              { return .jailbroken }
+        if result.isReverseEngineered       { return .reverseEngineered }
         if result.isAppIntegrityCompromised { return .appIntegrityCompromised }
-        if result.isFunctionHooked        { return .hooked }
-        if result.isMethodSwizzled        { return .methodSwizzled }
-        if result.isFridaDetected         { return .fridaDetected }
-        if result.isPinningBypassed       { return .pinningBypassed }
+        if result.isFunctionHooked          { return .hooked }
+        if result.isMethodSwizzled          { return .methodSwizzled }
+        if result.isFridaDetected           { return .fridaDetected }
+        if result.isPinningBypassed         { return .pinningBypassed }
         // High
-        if result.isDebuggerAttached      { return .debuggerAttached }
-        if result.isScreenRecorded        { return .screenRecording }
+        if result.isDebuggerAttached        { return .debuggerAttached }
+        if result.isScreenRecorded          { return .screenRecording }
         // Medium
-        if result.isEmulator              { return .emulator }
-        if result.isVPNOrProxyActive      { return .vpnProxy }
+        if result.isEmulator                { return .emulator }
+        if result.isVPNOrProxyActive        { return .vpnProxy }
 
         return .compromised
     }
