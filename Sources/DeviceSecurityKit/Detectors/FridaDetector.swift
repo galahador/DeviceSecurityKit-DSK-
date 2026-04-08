@@ -48,7 +48,6 @@ public final class FridaDetector {
         return false
     }
 
-    /// Returns a cached port-check result, refreshing it once per `portCheckCacheInterval`.
     private static func checkFridaPort() -> Bool {
         let now = Date()
         if let cached = _portCheckCache, now.timeIntervalSince(cached.date) < portCheckCacheInterval {

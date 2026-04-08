@@ -3,8 +3,6 @@ import XCTest
 
 final class HookDetectorTests: XCTestCase {
 
-    // On a clean non-jailbroken device/simulator, system functions
-    // should be in Apple libraries — hook detection must return false.
     func testNoHooksDetected_onCleanDevice() {
         XCTAssertFalse(HookDetector.isFunctionHooked())
     }
@@ -33,7 +31,6 @@ final class HookDetectorTests: XCTestCase {
             configuration: .disabled.withHookDetection(true)
         )
         let result = monitor.performCheck()
-        // On a clean device, no hooks should be found
         XCTAssertFalse(result.isFunctionHooked)
     }
 }

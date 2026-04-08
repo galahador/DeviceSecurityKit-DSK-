@@ -47,10 +47,6 @@ public final class DSK {
     }
 
     // MARK: - Countermeasures
-
-    /// Registers an automatic response that fires when `threat` is detected.
-    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
-    ///   Pass `false` to fire on every detection cycle regardless of throttling.
     @discardableResult
     public func countermeasure(
         for threat: SecurityThreat,
@@ -61,8 +57,6 @@ public final class DSK {
         return self
     }
 
-    /// Registers an automatic response that fires when any threat at or above `severity` is detected.
-    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
     @discardableResult
     public func countermeasure(
         forMinimumSeverity severity: ThreatSeverity,
@@ -73,8 +67,6 @@ public final class DSK {
         return self
     }
 
-    /// Registers an automatic response that fires on every detected threat.
-    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
     @discardableResult
     public func countermeasure(
         throttled: Bool = true,
@@ -84,27 +76,23 @@ public final class DSK {
         return self
     }
 
-    /// Registers a pre-built ``Countermeasure`` directly.
     @discardableResult
     public func addCountermeasure(_ countermeasure: Countermeasure) -> Self {
         monitor.addCountermeasure(countermeasure)
         return self
     }
 
-    /// Removes a specific countermeasure by identity.
     @discardableResult
     public func removeCountermeasure(_ countermeasure: Countermeasure) -> Self {
         monitor.removeCountermeasure(countermeasure)
         return self
     }
 
-    /// Removes all registered countermeasures.
     public func removeAllCountermeasures() {
         monitor.removeAllCountermeasures()
     }
 
     // MARK: - Lifecycle
-
     public func start() {
         monitor.startMonitoring()
     }

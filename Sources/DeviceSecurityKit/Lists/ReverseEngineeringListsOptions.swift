@@ -1,9 +1,5 @@
 import Foundation
 
-// All strings in this file are XOR-encoded with key 0xAA via StringObfuscator.
-// To add a new entry: call StringObfuscator.shared.conceal("YourString") in a
-// DEBUG build, copy the resulting [UInt8] array, and add it below.
-
 struct ReverseEngineeringListsOptions {
     
     let suspiciousLibraries: [String]

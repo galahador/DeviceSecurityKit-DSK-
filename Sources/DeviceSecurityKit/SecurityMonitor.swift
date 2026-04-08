@@ -6,9 +6,6 @@ public final class SecurityMonitor: SecurityMonitorType {
     private var monitoringTimer: DispatchSourceTimer?
     private let timerQueue = DispatchQueue(label: "com.devicesecuritykit.monitor", qos: .userInitiated)
 
-    // Bug 6 fix: declared as concurrent so that barrier writes and plain reads
-    // actually have distinct semantics. All writes must use sync(flags: .barrier);
-    // reads use plain sync for concurrent access.
     private let stateQueue = DispatchQueue(
         label: "com.devicesecuritykit.monitor.state",
         qos: .userInitiated,
@@ -59,7 +56,6 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Configuration
 
     public func configure(_ configuration: DeviceSecurityConfiguration) {
-        // Bug 6 fix: write needs .barrier on the now-concurrent stateQueue.
         stateQueue.sync(flags: .barrier) { self.configuration = configuration }
 
         if stateQueue.sync(execute: { isMonitoring }) {
@@ -72,7 +68,6 @@ public final class SecurityMonitor: SecurityMonitorType {
     }
 
     // MARK: - Handlers
-
     @discardableResult
     public func onStatusChange(_ handler: @escaping (SecurityStatus) -> Void) -> Self {
         stateQueue.sync(flags: .barrier) { _onStatusChange = handler }
@@ -89,8 +84,6 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     @discardableResult
     public func addCountermeasure(_ countermeasure: Countermeasure) -> Self {
-        // Bug 4 fix: .noThreat is never emitted — silently drop in release builds
-        // (debug builds are caught by the assert inside Countermeasure.init).
         if case .threat(let t) = countermeasure.trigger, t == .noThreat {
             return self
         }
@@ -112,7 +105,6 @@ public final class SecurityMonitor: SecurityMonitorType {
 
     public func performCheck() -> SecurityResult {
         let result = gatherThreats()
-        // Bug 6 fix: applyResult writes multiple state fields — needs .barrier.
         let pending = stateQueue.sync(flags: .barrier) { applyResult(result) }
         firePending(pending)
         return result
@@ -125,7 +117,6 @@ public final class SecurityMonitor: SecurityMonitorType {
     // MARK: - Monitoring
 
     public func startMonitoring() {
-        // Bug 6 fix: read-then-write of isMonitoring must be atomic — needs .barrier.
         let alreadyRunning = stateQueue.sync(flags: .barrier) { () -> Bool in
             if isMonitoring { return true }
             isMonitoring = true
@@ -219,8 +210,6 @@ public final class SecurityMonitor: SecurityMonitorType {
         return SecurityResult(threats: threats)
     }
 
-    // Bug 5 fix: returns currentThreats alongside newThreats so that unthrottled
-    // countermeasures can fire against the full active threat set every cycle.
     private func applyResult(_ result: SecurityResult) -> (
         statusChange: SecurityStatus?,
         newThreats: [SecurityThreat],
@@ -261,13 +250,6 @@ public final class SecurityMonitor: SecurityMonitorType {
             (_onStatusChange, _onThreatDetected, _countermeasures)
         }
 
-        // Bug 1 fix: countermeasures fire synchronously on the calling queue before
-        // this function returns. For periodic monitoring that is timerQueue; for
-        // performCheck() it is the caller's thread. This ensures countermeasures
-        // have completed before performCheck() returns to the call site.
-        // Throttled countermeasures act on newThreats (gated by the throttle window);
-        // unthrottled countermeasures act on currentThreats (every detected threat,
-        // every cycle) — Bug 5 fix.
         for cm in countermeasures {
             let targets = cm.throttled ? pending.newThreats : pending.currentThreats
             for threat in targets where cm.matches(threat) {
@@ -275,7 +257,6 @@ public final class SecurityMonitor: SecurityMonitorType {
             }
         }
 
-        // Notification callbacks remain async on the main queue (existing behaviour).
         guard pending.statusChange != nil || !pending.newThreats.isEmpty else { return }
         DispatchQueue.main.async {
             if let status = pending.statusChange {

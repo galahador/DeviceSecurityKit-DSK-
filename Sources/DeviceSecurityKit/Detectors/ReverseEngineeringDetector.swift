@@ -64,7 +64,6 @@ public final class ReverseEngineeringDetector {
     private static func checkCodeIntegrity() -> Bool {
         guard let executablePath = Bundle.main.executablePath else { return false }
         
-        // Executable must still exist on disk — absence indicates tampering.
         guard FileManager.default.fileExists(atPath: executablePath) else { return true }
         
 #if os(iOS) && !targetEnvironment(simulator)
