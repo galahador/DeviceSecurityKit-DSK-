@@ -46,6 +46,63 @@ public final class DSK {
         return self
     }
 
+    // MARK: - Countermeasures
+
+    /// Registers an automatic response that fires when `threat` is detected.
+    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
+    ///   Pass `false` to fire on every detection cycle regardless of throttling.
+    @discardableResult
+    public func countermeasure(
+        for threat: SecurityThreat,
+        throttled: Bool = true,
+        action: @escaping (SecurityThreat) -> Void
+    ) -> Self {
+        monitor.addCountermeasure(Countermeasure(trigger: .threat(threat), throttled: throttled, action: action))
+        return self
+    }
+
+    /// Registers an automatic response that fires when any threat at or above `severity` is detected.
+    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
+    @discardableResult
+    public func countermeasure(
+        forMinimumSeverity severity: ThreatSeverity,
+        throttled: Bool = true,
+        action: @escaping (SecurityThreat) -> Void
+    ) -> Self {
+        monitor.addCountermeasure(Countermeasure(trigger: .minimumSeverity(severity), throttled: throttled, action: action))
+        return self
+    }
+
+    /// Registers an automatic response that fires on every detected threat.
+    /// - Parameter throttled: When `true` (default) obeys the shared throttle window.
+    @discardableResult
+    public func countermeasure(
+        throttled: Bool = true,
+        action: @escaping (SecurityThreat) -> Void
+    ) -> Self {
+        monitor.addCountermeasure(Countermeasure(trigger: .anyThreat, throttled: throttled, action: action))
+        return self
+    }
+
+    /// Registers a pre-built ``Countermeasure`` directly.
+    @discardableResult
+    public func addCountermeasure(_ countermeasure: Countermeasure) -> Self {
+        monitor.addCountermeasure(countermeasure)
+        return self
+    }
+
+    /// Removes a specific countermeasure by identity.
+    @discardableResult
+    public func removeCountermeasure(_ countermeasure: Countermeasure) -> Self {
+        monitor.removeCountermeasure(countermeasure)
+        return self
+    }
+
+    /// Removes all registered countermeasures.
+    public func removeAllCountermeasures() {
+        monitor.removeAllCountermeasures()
+    }
+
     // MARK: - Lifecycle
 
     public func start() {
