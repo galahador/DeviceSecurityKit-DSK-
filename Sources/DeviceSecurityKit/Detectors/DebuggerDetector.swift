@@ -9,7 +9,7 @@ public final class DebuggerDetector {
     
     private static let detectionQueue = DispatchQueue(label: "DebuggerDetector.detection", attributes: .concurrent)
     private static var _isDetectionEnabled: Bool = true
-
+    
     private static let denyAttachQueue = DispatchQueue(label: "DebuggerDetector.denyAttach", qos: .background)
     private static var denyAttachTimer: DispatchSourceTimer?
     
@@ -23,11 +23,11 @@ public final class DebuggerDetector {
     }
     
     // MARK: - Continuous PT_DENY_ATTACH Hardening
-
+    
     public static func startContinuousDenyAttach(interval: TimeInterval = 1.0) {
 #if !DEBUG
         guard denyAttachTimer == nil else { return }
-
+        
         let timer = DispatchSource.makeTimerSource(queue: denyAttachQueue)
         timer.schedule(deadline: .now(), repeating: interval)
         timer.setEventHandler {
@@ -39,7 +39,7 @@ public final class DebuggerDetector {
         logger.debug("Continuous PT_DENY_ATTACH hardening started (interval: \(interval)s)")
 #endif
     }
-
+    
     public static func stopContinuousDenyAttach() {
 #if !DEBUG
         denyAttachTimer?.cancel()
@@ -47,7 +47,7 @@ public final class DebuggerDetector {
         logger.debug("Continuous PT_DENY_ATTACH hardening stopped")
 #endif
     }
-
+    
     public static func isDebuggerAttached() -> Bool {
         guard isDetectionEnabled else {
             logger.debug("Debugger detection is disabled")
@@ -159,9 +159,9 @@ public final class DebuggerDetector {
         
         let result = sysctl(&mib, UInt32(mib.count), &info, &size, nil, 0)
         
-        guard result == 0 else { 
+        guard result == 0 else {
             logger.error("Failed to get parent process info, sysctl returned: \(result)")
-            return false 
+            return false
         }
         
         let processName = withUnsafePointer(to: &info.kp_proc.p_comm) { ptr in
@@ -228,8 +228,8 @@ public final class DebuggerDetector {
     private static func checkBreakpointDetection() -> Bool {
 #if !DEBUG
         let functionPtr = unsafeBitCast(checkBreakpointDetection, to: UnsafeRawPointer.self)
-
-        #if arch(arm64)
+        
+#if arch(arm64)
         let instructions = functionPtr.assumingMemoryBound(to: UInt32.self)
         for i in 0..<4 {
             let instr = instructions.advanced(by: i).pointee
@@ -239,7 +239,7 @@ public final class DebuggerDetector {
                 return true
             }
         }
-        #else
+#else
         // x86/x64: INT3 is a single 0xCC byte
         let bytes = functionPtr.assumingMemoryBound(to: UInt8.self)
         for i in 0..<16 {
@@ -248,8 +248,8 @@ public final class DebuggerDetector {
                 return true
             }
         }
-        #endif
-
+#endif
+        
         return false
 #else
         return false
