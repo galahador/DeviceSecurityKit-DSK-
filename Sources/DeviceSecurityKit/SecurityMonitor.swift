@@ -213,6 +213,9 @@ public final class SecurityMonitor: SecurityMonitorType {
         if cfg.fridaDetectionEnabled && FridaDetector.isFridaDetected() {
             threats.append(.fridaDetected)
         }
+        if cfg.attestationCheckEnabled && AttestationDetector.isAttestationFailed() {
+            threats.append(.attestationFailed)
+        }
 
         return SecurityResult(threats: threats)
     }
@@ -284,6 +287,7 @@ public final class SecurityMonitor: SecurityMonitorType {
         if result.isFunctionHooked          { return .hooked }
         if result.isMethodSwizzled          { return .methodSwizzled }
         if result.isFridaDetected           { return .fridaDetected }
+        if result.isAttestationFailed       { return .attestationFailed }
         if result.isPinningBypassed         { return .pinningBypassed }
         // High
         if result.isDebuggerAttached        { return .debuggerAttached }
