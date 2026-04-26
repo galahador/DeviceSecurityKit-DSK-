@@ -20,6 +20,7 @@ public enum SecurityStatus: Equatable {
     case pinningBypassed
     case vpnProxy
     case fridaDetected
+    case attestationFailed
     case compromised
 
     public var isSecure: Bool {
@@ -52,6 +53,8 @@ public enum SecurityStatus: Equatable {
             return "VPN or proxy connection is active"
         case .fridaDetected:
             return "Frida instrumentation runtime detected"
+        case .attestationFailed:
+            return "Device integrity attestation failed"
         case .compromised:
             return "Device is compromised"
         }

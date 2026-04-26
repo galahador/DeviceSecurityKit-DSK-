@@ -18,7 +18,8 @@ let package = Package(
             dependencies: [],
             path: "Sources",
             linkerSettings: [
-                .linkedFramework("NetworkExtension")
+                .linkedFramework("NetworkExtension"),
+                .linkedFramework("DeviceCheck")
             ]
         ),
         .testTarget(

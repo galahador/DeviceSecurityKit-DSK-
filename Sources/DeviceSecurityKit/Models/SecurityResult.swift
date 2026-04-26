@@ -62,5 +62,9 @@ public struct SecurityResult: Equatable {
         return threats.contains(.fridaDetected)
     }
 
+    public var isAttestationFailed: Bool {
+        return threats.contains(.attestationFailed)
+    }
+
     public static let secure = SecurityResult(threats: [])
 }
