@@ -4,6 +4,12 @@
   <img src="https://raw.githubusercontent.com/galahador/DeviceSecurityKit-DSK-/develop/DSK%20Image.png" width="340" alt="DeviceSecurityKit" />
 </p>
 
+---
+
+## 🚧 Under Construction 🚧 
+
+---
+
 > Lightweight iOS security detection. Zero dependencies. Always free.
 
 [![Swift 5.9+](https://img.shields.io/badge/Swift-5.9+-F05138?style=flat&logo=swift&logoColor=white)](https://swift.org)
@@ -12,10 +18,6 @@
 [![SPM Compatible](https://img.shields.io/badge/SPM-compatible-4BC51D?style=flat)](https://swift.org/package-manager/)
 
 Detect jailbreak, debugger, emulator, screen recording, and reverse engineering attempts with a single import.
-
----
-
-## 🚧 Under Construction 🚧 
 
 ---
 
