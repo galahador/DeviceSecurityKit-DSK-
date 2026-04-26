@@ -1,3 +1,10 @@
+//
+//  Countermeasure.swift
+//  DeviceSecurityKit
+//
+//  Created by Petar Lemajic on 26/04/2026.
+//
+
 import Foundation
 
 /// An automatic response that fires when a matching threat is detected.

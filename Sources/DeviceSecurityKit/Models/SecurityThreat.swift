@@ -1,3 +1,10 @@
+//
+//  SecurityThreat.swift
+//  DeviceSecurityKit
+//
+//  Created by Petar Lemajic on 26/04/2026.
+//
+
 import Foundation
 
 public enum SecurityThreat: String, CaseIterable, Equatable {

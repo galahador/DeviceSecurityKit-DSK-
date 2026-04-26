@@ -1,3 +1,10 @@
+//
+//  DebuggerDetector.swift
+//  DeviceSecurityKit
+//
+//  Created by Petar Lemajic on 26/04/2026.
+//
+
 import Foundation
 import Darwin
 import Darwin.C
